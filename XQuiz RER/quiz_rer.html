@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz R∴E∴R∴ — Le Jeu du Catéchisme</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Overlay passage de grade -->
+    <div id="grade-overlay" class="grade-overlay">
+        <span class="grade-fire-text" id="grade-fire-text"></span>
+    </div>
+
+    <!-- Overlay transition section secrète -->
+    <div id="secret-overlay" class="secret-overlay">
+        <div class="secret-transition">
+            <div class="secret-symbol" id="secret-symbol"></div>
+            <p class="secret-text" id="secret-text"></p>
+        </div>
+    </div>
+
+    <!-- Écran de jeu -->
+    <div id="screen-game" class="screen active">
+        <div class="game-layout">
+
+            <!-- PANNEAU GAUCHE : Console -->
+            <div class="panel-left">
+                <div class="cartouche">
+                    <div class="cartouche-header">
+                        <div class="cartouche-ornament">⊹ ⊹ ⊹</div>
+                        <h1 class="cartouche-title">Quiz R∴E∴R∴</h1>
+                        <div class="cartouche-ornament">⊹ ⊹ ⊹</div>
+                    </div>
+                    <div class="cartouche-divider"></div>
+                    <div class="cartouche-info">
+                        <div class="cartouche-row">
+                            <span class="cartouche-label">Grade</span>
+                            <span class="cartouche-value" id="grade-title">Apprenti</span>
+                        </div>
+                        <div class="cartouche-row">
+                            <span class="cartouche-label">Marche</span>
+                            <span class="cartouche-value cartouche-step"><span id="current-step">0</span> / 7</span>
+                        </div>
+                        <div class="cartouche-row">
+                            <span class="cartouche-label">Score</span>
+                            <span class="cartouche-value" id="score">0</span>
+                        </div>
+                    </div>
+                    <div class="cartouche-divider"></div>
+                    <div class="cartouche-progress">
+                        <div class="progress-steps">
+                            <span class="progress-dot" data-step="0">0</span>
+                            <span class="progress-dot" data-step="1">1</span>
+                            <span class="progress-dot" data-step="2">2</span>
+                            <span class="progress-dot checkpoint-dot" data-step="3">3</span>
+                            <span class="progress-dot" data-step="4">4</span>
+                            <span class="progress-dot checkpoint-dot" data-step="5">5</span>
+                            <span class="progress-dot" data-step="6">6</span>
+                            <span class="progress-dot checkpoint-dot" data-step="7">7</span>
+                        </div>
+                    </div>
+                    <div class="cartouche-secret-info" id="cartouche-secret-info">
+                        <div class="cartouche-row">
+                            <span class="cartouche-label">Joker</span>
+                            <span class="cartouche-value" id="joker-display"></span>
+                        </div>
+                        <div class="cartouche-row">
+                            <span class="cartouche-label">Tentatives</span>
+                            <span class="cartouche-value" id="attempts-display">0</span>
+                        </div>
+                    </div>
+                    <div class="cartouche-footer">
+                        <span class="btn-debug" id="btn-debug">⊹</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTRE : Le plateau (l'image) -->
+            <div class="panel-center">
+                <div class="board-fullscreen" id="board-fullscreen">
+                    <img src="Plateau de jeu.png" alt="Plateau du Temple" class="board-image" id="board-image">
+                    <div class="step-lights" id="step-lights">
+                        <div class="step-light" data-step="0"></div>
+                        <div class="step-light" data-step="1"></div>
+                        <div class="step-light" data-step="2"></div>
+                        <div class="step-light" data-step="3"></div>
+                        <div class="step-light" data-step="4"></div>
+                        <div class="step-light" data-step="5"></div>
+                        <div class="step-light" data-step="6"></div>
+                        <div class="step-light" data-step="7"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANNEAU DROIT : Pioche & Carte -->
+            <div class="panel-right">
+                <!-- Pioche (dos de carte décoratif) -->
+                <div class="pioche" id="card-container">
+                    <div class="pioche-stack">
+                        <div class="pioche-card-shadow"></div>
+                        <div class="pioche-card-shadow"></div>
+                    </div>
+                    <div class="card" id="card">
+                        <div class="card-face card-back" id="card-back">
+                            <div class="card-back-content">
+                                <p class="card-instruction">Tirez une carte</p>
+                            </div>
+                        </div>
+                        <div class="card-face card-front" id="card-front">
+                            <div class="card-timer" id="card-timer"></div>
+                            <div class="card-category" id="card-category">Catéchisme</div>
+                            <div class="card-question" id="card-question"></div>
+                            <div class="card-answers" id="card-answers"></div>
+                            <div class="card-input-zone" id="card-input-zone">
+                                <input type="text" class="input-answer" id="input-answer" placeholder="Votre réponse..." autocomplete="off">
+                                <button class="btn-validate" id="btn-validate">Valider</button>
+                            </div>
+                            <div class="card-self-eval" id="card-self-eval">
+                                <p class="self-eval-reveal" id="self-eval-reveal"></p>
+                                <p class="self-eval-prompt">Avez-vous bien répondu ?</p>
+                                <div class="self-eval-buttons">
+                                    <button class="btn-eval btn-eval-yes" id="btn-eval-yes">Oui</button>
+                                    <button class="btn-eval btn-eval-no" id="btn-eval-no">Non</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="feedback-slot" id="feedback-slot"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Écran de victoire / tableau de bord -->
+    <div id="screen-victory" class="screen">
+        <div class="victory-overlay">
+            <div class="victory-symbol">☉</div>
+            <h1>Lumière !</h1>
+            <p class="victory-text">Vous avez gravi les 7 marches des 3 grades du Temple.</p>
+            <p class="victory-score">Score final : <span id="final-score">0</span></p>
+
+            <div class="dashboard">
+                <div class="dashboard-row">
+                    <span class="dashboard-label">Temps de jeu</span>
+                    <span class="dashboard-value" id="dash-time">—</span>
+                </div>
+                <div class="dashboard-row">
+                    <span class="dashboard-label">Apprenti</span>
+                    <span class="dashboard-value" id="dash-apprenti">—</span>
+                </div>
+                <div class="dashboard-row">
+                    <span class="dashboard-label">Compagnon</span>
+                    <span class="dashboard-value" id="dash-compagnon">—</span>
+                </div>
+                <div class="dashboard-row">
+                    <span class="dashboard-label">Maître</span>
+                    <span class="dashboard-value" id="dash-maitre">—</span>
+                </div>
+                <div class="dashboard-row">
+                    <span class="dashboard-label">Section Secrète</span>
+                    <span class="dashboard-value" id="dash-secret">—</span>
+                </div>
+            </div>
+
+            <div class="missed-questions" id="missed-questions">
+                <h2 class="missed-title">Questions manquées</h2>
+                <div class="missed-list" id="missed-list"></div>
+            </div>
+
+            <div class="victory-buttons">
+                <button class="btn-restart" id="btn-restart">Recommencer</button>
+                <button class="btn-restart btn-review" id="btn-review">Réviser mes erreurs</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

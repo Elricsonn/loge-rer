@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Loge RER - Rite Écossais Rectifié</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0b08; margin: 0; height: 100vh; font-family: 'Crimson Text', serif; overflow: hidden; }
+  #conteneur-plateau { width: 100%; height: 100%; overflow: auto; display: flex; justify-content: center; align-items: center; background: #111; }
+  .btn-reset-svg { cursor: pointer; transition: filter 0.2s; }
+  .btn-reset-svg:hover { filter: brightness(1.2); }
+  .btn-reset-svg:active { filter: brightness(0.8); }
+  svg { display: block; overflow: visible; filter: drop-shadow(0 0 40px #000); }
+  .draggable { cursor: grab; transition: filter 0.1s; }
+  .draggable:hover { filter: brightness(1.2); }
+  .draggable:active { cursor: grabbing; }
+  text { pointer-events: none; user-select: none; }
+
+  /* ÉCRAN DE LOGIN */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 99999;
+    background: radial-gradient(ellipse at center, #1a1200 0%, #0a0800 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px;
+  }
+  #login-screen h1 {
+    color: #d4a84b; font-family: 'Cinzel', serif; font-size: 1.6em;
+    letter-spacing: 4px; text-align: center;
+    text-shadow: 0 0 20px rgba(212,168,75,0.4);
+  }
+  #login-screen .subtitle {
+    color: #8b6914; font-family: 'Cinzel', serif; font-size: 0.85em;
+    letter-spacing: 3px; text-align: center;
+  }
+  #login-screen .separateur {
+    width: 200px; height: 1px;
+    background: linear-gradient(to right, transparent, #d4a84b, transparent);
+  }
+  #login-form {
+    display: flex; flex-direction: column; gap: 14px; align-items: center;
+    background: rgba(26,16,0,0.8); border: 1px solid #3a2a0a;
+    padding: 28px 36px; border-radius: 6px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(212,168,75,0.03);
+    min-width: 300px;
+  }
+  #login-form select {
+    width: 100%; padding: 10px 12px;
+    background: #1a1200; color: #d4a84b;
+    border: 1px solid #3a2a0a; border-radius: 4px;
+    font-family: 'Cinzel', serif; font-size: 0.9em;
+    cursor: pointer; outline: none;
+  }
+  #login-form input[type=password] {
+    width: 100%; padding: 10px 12px;
+    background: #0f0b00; color: #f0e8d0;
+    border: 1px solid #3a2a0a; border-radius: 4px;
+    font-family: 'Crimson Text', serif; font-size: 1em;
+    outline: none; letter-spacing: 3px;
+  }
+  #login-form input[type=password]:focus { border-color: #8b6914; }
+  #login-form button {
+    width: 100%; padding: 11px;
+    background: #2a1800; color: #d4a84b;
+    border: 1px solid #8b6914; border-radius: 4px;
+    font-family: 'Cinzel', serif; font-size: 0.9em;
+    cursor: pointer; letter-spacing: 2px;
+    transition: background 0.2s;
+  }
+  #login-form button:hover { background: #3a2400; }
+  #login-error {
+    color: #cc4444; font-size: 0.85em; text-align: center;
+    min-height: 1.2em; font-family: 'Cinzel', serif;
+  }
+  .etoile-login { color: #d4a84b; font-size: 1.4em; opacity: 0.6; }
+
+  /* ── Panneaux latéraux : transitions ── */
+  #regie-panel        { transition: transform 0.28s ease; }
+  #panneau-dialogue   { transition: transform 0.28s ease; }
+  #panneau-catechisme { transition: left 0.28s ease, transform 0.28s ease; }
+
+  /* ── Bouton toggle régie (gauche) ── */
+  #btn-toggle-regie {
+    position: fixed; top: 50%; left: 270px;
+    transform: translateY(-50%);
+    width: 18px; height: 58px; z-index: 10002; display: none;
+    background: #1a1a1a; color: #d4a84b;
+    border: 1px solid #8b6914; border-left: none;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer; font-size: 13px; padding: 0;
+    transition: left 0.28s ease, background 0.15s, color 0.15s;
+    align-items: center; justify-content: center;
+  }
+  #btn-toggle-regie:hover { background: #2a1800; color: gold; border-color: gold; }
+
+  /* ── Bord flux : poignée resize + bouton toggle ── */
+  #flux-bord {
+    position: fixed; top: 0; right: 540px; width: 16px; height: 100%;
+    z-index: 10002; display: none;
+    cursor: ew-resize;
+    transition: right 0.28s ease;
+  }
+  #flux-bord-ligne {
+    position: absolute; left: 7px; top: 0; width: 2px; height: 100%;
+    background: #3a2a0a; pointer-events: none; transition: background 0.2s;
+  }
+  #flux-bord:hover #flux-bord-ligne, #flux-bord.en-resize #flux-bord-ligne
+    { background: #8b6914; }
+  #btn-toggle-flux {
+    position: absolute; top: 50%; left: 0; transform: translateY(-50%);
+    width: 16px; height: 58px;
+    background: #111; color: #d4a84b;
+    border: 1px solid #3a2a0a; border-right: none;
+    border-radius: 5px 0 0 5px;
+    cursor: pointer; font-size: 13px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  #btn-toggle-flux:hover { background: #1a1400; color: gold; border-color: #8b6914; }
+
+  /* ── Overlay Quiz ── */
+  #quiz-overlay {
+    display: none; position: fixed; inset: 0; z-index: 99998;
+    background: rgba(0,0,0,0.85);
+    align-items: center; justify-content: center;
+  }
+  #quiz-overlay.active { display: flex; }
+  #quiz-overlay iframe {
+    width: 94vw; height: 92vh; border: 2px solid #8b6914;
+    border-radius: 8px; background: #0d0a04;
+    box-shadow: 0 0 60px rgba(212,168,75,0.25);
+  }
+  #quiz-overlay .quiz-close {
+    position: absolute; top: 12px; right: 20px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #1a1200; color: #d4a84b; border: 1px solid #8b6914;
+    font-size: 20px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    transition: background 0.15s;
+    z-index: 1;
+  }
+  #quiz-overlay .quiz-close:hover { background: #3a2400; color: gold; }
+</style>
+</head>
+<body>
+
+<!-- ÉCRAN DE LOGIN -->
+<div id="login-screen">
+  <div class="etoile-login">✦ ✦ ✦</div>
+  <h1>RITUEL R∴E∴R∴</h1>
+  <div class="subtitle">Rite Écossais Rectifié</div>
+  <div class="separateur"></div>
+  <div id="login-form">
+    <select id="login-grade">
+      <option value="">— Sélectionner votre grade —</option>
+      <option value="apprenti">Loge d'Apprenti</option>
+      <option value="compagnon">Loge de Compagnon</option>
+      <option value="maitre">Loge de Maître</option>
+      <option value="me">Loge de Maître Écossais de Saint-André</option>
+    </select>
+    <input type="password" id="login-mdp" placeholder="Mot de passe"/>
+    <button onclick="tenterLogin()">Entrer en Loge</button>
+    <div id="login-error"></div>
+  </div>
+  <div class="separateur"></div>
+  <div class="etoile-login">✦</div>
+</div>
+
+<!-- PLATEAU SVG -->
+<div id="conteneur-plateau">
+  <svg viewBox="0 -40 1400 1340" width="1400" height="1300" xmlns="http://www.w3.org/2000/svg" id="loge-svg">
+
+<defs>
+      <!-- BOIS ANCIEN : gradient de base warm -->
+      <linearGradient id="wood-base" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   stop-color="#3e1f0a"/>
+        <stop offset="8%"   stop-color="#6b3a1f"/>
+        <stop offset="20%"  stop-color="#8b5a2b"/>
+        <stop offset="35%"  stop-color="#a0723a"/>
+        <stop offset="50%"  stop-color="#7a4e22"/>
+        <stop offset="65%"  stop-color="#9c6832"/>
+        <stop offset="80%"  stop-color="#b07d42"/>
+        <stop offset="92%"  stop-color="#7a4e22"/>
+        <stop offset="100%" stop-color="#3e1f0a"/>
+      </linearGradient>
+
+      <!-- Filtre bois : veines et fibres -->
+      <filter id="wood-grain" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.015 0.35" numOctaves="4" seed="8" result="noise"/>
+        <feColorMatrix type="saturate" values="0.3" in="noise" result="desatNoise"/>
+        <feBlend in="SourceGraphic" in2="desatNoise" mode="multiply" result="blend"/>
+        <feComposite in="blend" in2="SourceGraphic" operator="in"/>
+      </filter>
+
+      <!-- Filtre vieillissement : légère patine sombre -->
+      <filter id="wood-age" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="turbulence" baseFrequency="0.04 0.08" numOctaves="3" seed="42" result="age"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 0.12   0 0 0 0 0.06   0 0 0 0 0   0 0 0 0.18 0" in="age" result="darkAge"/>
+        <feComposite in="darkAge" in2="SourceGraphic" operator="in" result="ageLayer"/>
+        <feBlend in="SourceGraphic" in2="ageLayer" mode="multiply"/>
+      </filter>
+
+      <!-- Pattern bois final combiné -->
+      <pattern id="wood" width="100" height="720" patternUnits="userSpaceOnUse">
+        <rect width="100" height="720" fill="url(#wood-base)"/>
+        <rect width="100" height="720" fill="url(#wood-base)" filter="url(#wood-grain)" opacity="0.7"/>
+        <!-- Veines foncées longitudinales -->
+        <line x1="18" y1="0" x2="16" y2="720" stroke="#3a1a06" stroke-width="0.7" opacity="0.4"/>
+        <line x1="42" y1="0" x2="44" y2="720" stroke="#2e1505" stroke-width="0.5" opacity="0.3"/>
+        <line x1="67" y1="0" x2="65" y2="720" stroke="#3a1a06" stroke-width="0.8" opacity="0.35"/>
+        <line x1="85" y1="0" x2="87" y2="720" stroke="#2e1505" stroke-width="0.4" opacity="0.25"/>
+        <!-- Veines claires (reflets) -->
+        <line x1="28" y1="0" x2="30" y2="720" stroke="#c49a52" stroke-width="0.6" opacity="0.2"/>
+        <line x1="55" y1="0" x2="53" y2="720" stroke="#b8863c" stroke-width="0.5" opacity="0.15"/>
+        <!-- Nœud de bois (haut) -->
+        <ellipse cx="72" cy="180" rx="7" ry="14" fill="none" stroke="#2e1505" stroke-width="1" opacity="0.4"/>
+        <ellipse cx="72" cy="180" rx="4" ry="8"  fill="#2e1505" opacity="0.2"/>
+        <!-- Nœud de bois (bas) -->
+        <ellipse cx="30" cy="520" rx="5" ry="11" fill="none" stroke="#2e1505" stroke-width="0.8" opacity="0.35"/>
+        <ellipse cx="30" cy="520" rx="2" ry="5"  fill="#2e1505" opacity="0.15"/>
+      </pattern>
+
+      <!-- Gradient relief banc : effet rebord taillé -->
+      <linearGradient id="relief-banc" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   stop-color="#1a0a03"/>
+        <stop offset="6%"   stop-color="#4a2510"/>
+        <stop offset="20%"  stop-color="#7a4a22"/>
+        <stop offset="50%"  stop-color="#a06535"/>
+        <stop offset="80%"  stop-color="#7a4a22"/>
+        <stop offset="94%"  stop-color="#4a2510"/>
+        <stop offset="100%" stop-color="#1a0a03"/>
+      </linearGradient>
+
+      <!-- Gradient bureau : liserai doré -->
+      <linearGradient id="grad-bureau" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#f0d060"/>
+        <stop offset="25%"  stop-color="#d4a84b"/>
+        <stop offset="50%"  stop-color="#b8860b"/>
+        <stop offset="75%"  stop-color="#d4a84b"/>
+        <stop offset="100%" stop-color="#f0d060"/>
+      </linearGradient>
+      <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse"><path d="M 80 0 L 0 0 0 80" fill="none" stroke="#5a3a18" stroke-width="1" opacity="0.6"/></pattern>
+      <pattern id="tiles" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#222"/><rect x="1" y="1" width="38" height="38" fill="none" stroke="#333"/></pattern>
+      <pattern id="stone" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#e8dcc8"/><rect x="0" y="0" width="5" height="5" fill="#ddd0b8" opacity="0.5"/><rect x="5" y="5" width="5" height="5" fill="#ddd0b8" opacity="0.5"/></pattern>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#d4a84b" opacity="0.6"/></marker>
+
+      <filter id="shadow-pion" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/>
+      </filter>
+
+      <radialGradient id="grad-bleu-bijou" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="#4fc3f7"/> <stop offset="50%" stop-color="#039be5"/> <stop offset="100%" stop-color="#01579b"/> </radialGradient>
+
+      <linearGradient id="grad-or-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fff59d"/>
+        <stop offset="40%" stop-color="#fbc02d"/>
+        <stop offset="100%" stop-color="#f57f17"/>
+      </linearGradient>
+      
+      <radialGradient id="grad-flamme" cx="50%" cy="80%" r="50%">
+            <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+            <stop offset="20%" stop-color="#ffeb3b" stop-opacity="0.9"/>
+            <stop offset="60%" stop-color="#ff9800" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#ff5722" stop-opacity="0"/>
+      </radialGradient>
+
+      <!-- Gradient vert ME -->
+      <radialGradient id="shine-vert-me" cx="35%" cy="30%" r="65%">
+        <stop offset="0%"   stop-color="#90ee90" stop-opacity="0.8"/>
+        <stop offset="100%" stop-color="#228b22" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="shine-bleu-clair" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#87CEEB" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#4682B4" stop-opacity="0.2"/>
+      </radialGradient>
+
+      <!-- MARBRE SOL INTÉRIEUR -->
+      <filter id="marble-noise" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="turbulence" baseFrequency="0.012 0.008" numOctaves="4" seed="3" result="noise"/>
+        <feColorMatrix type="saturate" values="0" in="noise" result="grey"/>
+        <feBlend in="SourceGraphic" in2="grey" mode="multiply" result="blended"/>
+        <feComposite in="blended" in2="SourceGraphic" operator="in"/>
+      </filter>
+      <linearGradient id="marbre-base" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#f8f2e6"/>
+        <stop offset="35%"  stop-color="#ede4cc"/>
+        <stop offset="65%"  stop-color="#f5edd8"/>
+        <stop offset="100%" stop-color="#e8dfc8"/>
+      </linearGradient>
+
+      <!-- MARBRE PAS PERDUS : noir marquina veiné d'or -->
+      <linearGradient id="marbre-noir-base" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#1a1a1a"/>
+        <stop offset="40%"  stop-color="#2a2820"/>
+        <stop offset="70%"  stop-color="#1e1c18"/>
+        <stop offset="100%" stop-color="#141410"/>
+      </linearGradient>
+      <filter id="marble-noir-noise" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="turbulence" baseFrequency="0.018 0.010" numOctaves="5" seed="7" result="noise"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 0.55
+                                              0 0 0 0 0.42
+                                              0 0 0 0 0.05
+                                              0 0 0 0.35 0" in="noise" result="gold-veins"/>
+        <feBlend in="SourceGraphic" in2="gold-veins" mode="screen" result="blended"/>
+        <feComposite in="blended" in2="SourceGraphic" operator="in"/>
+      </filter>
+
+      <!-- BOUGIE ivoire -->
+      <linearGradient id="grad-bougie" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   stop-color="#d4c89a"/>
+        <stop offset="30%"  stop-color="#f5f0dc"/>
+        <stop offset="70%"  stop-color="#ede3c0"/>
+        <stop offset="100%" stop-color="#c8bb88"/>
+      </linearGradient>
+      <!-- Flamme dorée cierge -->
+      <radialGradient id="grad-flamme-or" cx="50%" cy="80%" r="50%">
+        <stop offset="0%"   stop-color="#fff" stop-opacity="1"/>
+        <stop offset="25%"  stop-color="#fff9c4" stop-opacity="0.95"/>
+        <stop offset="60%"  stop-color="#ffca28" stop-opacity="0.85"/>
+        <stop offset="100%" stop-color="#ff8f00" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Chandelier métal doré -->
+      <linearGradient id="grad-chandelier" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   stop-color="#8b6914"/>
+        <stop offset="40%"  stop-color="#d4a84b"/>
+        <stop offset="70%"  stop-color="#c49a35"/>
+        <stop offset="100%" stop-color="#7a5a10"/>
+      </linearGradient>
+
+      <!-- ── Filtre feu ardent — chiffres qui s'envolent ── -->
+      <filter id="feu-ardent" x="-55%" y="-85%" width="210%" height="230%"
+              color-interpolation-filters="linearRGB">
+        <!-- Turbulence animée : la graine change pour faire vaciller les flammes -->
+        <feTurbulence type="turbulence" baseFrequency="0.038 0.075" numOctaves="3" seed="2" result="turb">
+          <animate attributeName="seed" calcMode="discrete"
+                   values="2;9;4;17;6;22;1;13;8;20;3;15;11;5;19"
+                   dur="1.6s" repeatCount="indefinite"/>
+        </feTurbulence>
+        <!-- Déformation des bords — les langues de feu -->
+        <feDisplacementMap in="SourceGraphic" in2="turb" scale="11"
+                           xChannelSelector="R" yChannelSelector="G" result="dist"/>
+        <!-- Trois niveaux de flou pour les couches de flamme -->
+        <feGaussianBlur in="dist" stdDeviation="20" result="g-ext"/>
+        <feGaussianBlur in="dist" stdDeviation="9"  result="g-mid"/>
+        <feGaussianBlur in="dist" stdDeviation="3.5" result="g-int"/>
+        <!-- Couleur rouge-orangé pour l'halo extérieur -->
+        <feColorMatrix in="g-ext" type="matrix"
+          values="2.2 0 0 0 0.15
+                  0.5 0 0 0 0
+                  0   0 0 0 0
+                  0   0 0 0.5 0" result="c-ext"/>
+        <!-- Couleur orange-ambre pour la couche intermédiaire -->
+        <feColorMatrix in="g-mid" type="matrix"
+          values="2.2 0 0 0 0.1
+                  1.4 0 0 0 0.05
+                  0   0 0 0 0
+                  0   0 0 0.75 0" result="c-mid"/>
+        <!-- Couleur jaune vif pour le cœur -->
+        <feColorMatrix in="g-int" type="matrix"
+          values="2 0 0 0 0.3
+                  2 0 0 0 0.3
+                  0 0 0 0 0
+                  0 0 0 0.95 0" result="c-int"/>
+        <!-- Assemblage : aura feu derrière, chiffre rouge original par-dessus -->
+        <feMerge>
+          <feMergeNode in="c-ext"/>
+          <feMergeNode in="c-mid"/>
+          <feMergeNode in="c-int"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+
+    </defs>
+
+    <rect x="1140" y="10" width="260" height="1140" fill="#e0d0b0" stroke="#8b6914" stroke-width="2" rx="4"/>
+    <text x="1270" y="40" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#3a2200" font-weight="700">RÉSERVE</text>
+    <line x1="1160" y1="50" x2="1380" y2="50" stroke="#8b6914" stroke-width="1"/>
+    
+    <text x="1270" y="80" text-anchor="middle" font-family="Crimson Text" font-size="12" fill="#6b4c10" font-style="italic" font-weight="bold">OFFICIERS</text>
+    <line x1="1160" y1="460" x2="1380" y2="460" stroke="#8b6914" opacity="0.3"/>
+
+    <text x="1270" y="480" text-anchor="middle" font-family="Crimson Text" font-size="11" fill="#6b4c10" font-style="italic">Maîtres</text>
+    <line x1="1160" y1="670" x2="1380" y2="670" stroke="#8b6914" opacity="0.3"/>
+
+    <text x="1270" y="690" text-anchor="middle" font-family="Crimson Text" font-size="11" fill="#6b4c10" font-style="italic">Compagnons</text>
+    <line x1="1160" y1="870" x2="1380" y2="870" stroke="#8b6914" opacity="0.3"/>
+
+    <text x="1270" y="890" text-anchor="middle" font-family="Crimson Text" font-size="11" fill="#6b4c10" font-style="italic">Apprentis</text>
+    <text x="1270" y="1090" text-anchor="middle" font-family="Crimson Text" font-size="11" fill="#6b4c10" font-style="italic"></text>
+
+    <!-- PAS PERDUS : MARBRE NOIR MARQUINA -->
+    <rect x="130" y="1160" width="1270" height="130" fill="url(#marbre-noir-base)" stroke="#444" stroke-width="2"/>
+    <rect x="130" y="1160" width="1270" height="130" fill="url(#marbre-noir-base)" filter="url(#marble-noir-noise)" stroke="#444" stroke-width="2" opacity="0.9"/>
+    
+    <!-- Séparateur doré vertical gauche (après boutons) -->
+    <line x1="430" y1="1168" x2="430" y2="1282" stroke="#d4a84b" stroke-width="1" opacity="0.4"/>
+    <!-- Séparateur doré vertical droit (zone rangement) -->
+    <line x1="750" y1="1168" x2="750" y2="1282" stroke="#d4a84b" stroke-width="1" opacity="0.4"/>
+
+    <!-- TITRE centré entre les deux séparateurs -->
+    <text x="590" y="1210" text-anchor="middle" font-family="Cinzel" font-size="16" fill="#555" font-weight="bold" letter-spacing="4">PAS PERDUS</text>
+    <line x1="460" y1="1218" x2="720" y2="1218" stroke="#d4a84b" stroke-width="0.8" opacity="0.5"/>
+    <text x="590" y="1260" text-anchor="middle" font-family="Crimson Text" font-size="11" fill="#d4a84b" font-style="italic" opacity="0.7">Loge R∴E∴R∴</text>
+
+    <!-- BOUTONS à gauche -->
+    <!-- ZONE RANGEMENT éléments liturgiques (chandelier + cierges + vertus) -->
+    <text x="1070" y="1185" text-anchor="middle" font-family="Cinzel" font-size="9" fill="#d4a84b" opacity="0.6" letter-spacing="2">ÉLÉMENTS LITURGIQUES</text>
+    <line x1="780" y1="1190" x2="1360" y2="1190" stroke="#d4a84b" stroke-width="0.6" opacity="0.35"/>
+
+    <!-- SOL MARBRÉ INTÉRIEUR -->
+    <rect x="130" y="10" width="1000" height="1140" fill="url(#marbre-base)" stroke="#8b6914" stroke-width="3" rx="2"/>
+    <rect x="130" y="10" width="1000" height="1140" fill="url(#marbre-base)" filter="url(#marble-noise)" stroke="#8b6914" stroke-width="3" rx="2" opacity="0.85"/>
+    <rect x="130" y="10" width="1000" height="1140" fill="url(#grid)"/>
+
+    <path d="M 450,790 A 250,300 0 1 1 810,790" fill="none" stroke="#d4a84b" stroke-width="4" opacity="0.4" stroke-dasharray="12,8" marker-end="url(#arrowhead)"/>
+
+    <image x="600" y="10" width="60" height="60" href="images/et_tenebrae.png" preserveAspectRatio="xMidYMid meet"/>
+    <text x="630" y="78" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#3a2200" font-weight="700">ORIENT</text>
+    
+    <rect x="588" y="86" width="88" height="70" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="586" y="84" width="88" height="70" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="586" y="84" width="88" height="70" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="589" y="87" width="82" height="64" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+    <text x="630" y="168" text-anchor="middle" font-family="Cinzel" font-size="9" fill="#3a2200" font-weight="600">Autel</text>
+
+    <rect x="544" y="160" width="172" height="22" fill="url(#stone)" stroke="#9a8060" stroke-width="1.2"/>
+    <rect x="520" y="182" width="220" height="19" fill="#ede0c4" stroke="#9a8060" stroke-width="1"/>
+    <rect x="494" y="201" width="272" height="19" fill="#e8d8b8" stroke="#9a8060" stroke-width="1"/>
+    <!-- ADHUC STAT — au pied de l'autel, par-dessus les marches -->
+    <image id="adhuc-stat" x="580" y="154" width="107" height="80" href="images/adhuc_stat.png" preserveAspectRatio="xMidYMid meet"/>
+    <image id="dirigit-obliqua" x="580" y="154" width="107" height="80" href="images/dirigit_obliqua.png" preserveAspectRatio="xMidYMid meet" visibility="hidden"/>
+    <image id="etoile-flamboyante" x="661" y="10" width="56" height="56" href="images/étoile_flamboyante.png" preserveAspectRatio="xMidYMid meet" visibility="hidden"/>
+
+    <image id="tapis-loge" x="495" y="340" width="270" height="450" href="images/tapis_loge.png" preserveAspectRatio="none"/>
+    <rect x="495" y="340" width="270" height="450" fill="none" stroke="#555" opacity="0.3"/>
+
+    <g transform="translate(780, 360)">
+        <path d="M-8,10 L8,10 L5,5 L-5,5 Z" fill="#b8860b" stroke="#8b6914"/>
+        <rect x="-2" y="0" width="4" height="5" fill="#d4a84b"/>
+        <rect x="-4" y="-30" width="8" height="30" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+        <g id="flamme-sagesse" visibility="hidden">
+        <ellipse cx="0" cy="-38" rx="3" ry="6" fill="url(#grad-flamme)">
+            <animate attributeName="ry" values="6;7;5.5;6.5;6" dur="0.8s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="3;3.5;2.8;3.2;3" dur="0.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;1;0.9;1;0.8" dur="0.5s" repeatCount="indefinite"/>
+        </ellipse>
+        </g>
+        <text x="15" y="5" font-family="Cinzel" font-size="10" fill="#8b6914" font-weight="bold">SAGESSE</text>
+    </g>
+
+    <g transform="translate(780, 770)">
+        <path d="M-8,10 L8,10 L5,5 L-5,5 Z" fill="#b8860b" stroke="#8b6914"/>
+        <rect x="-2" y="0" width="4" height="5" fill="#d4a84b"/>
+        <rect x="-4" y="-30" width="8" height="30" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+        <g id="flamme-beaute" visibility="hidden">
+        <ellipse cx="0" cy="-38" rx="3" ry="6" fill="url(#grad-flamme)">
+            <animate attributeName="ry" values="6.5;6;7;6.5" dur="0.9s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="3.2;3;3.5;3.2" dur="0.9s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9;0.8;1;0.9" dur="0.6s" repeatCount="indefinite"/>
+        </ellipse>
+        </g>
+        <text x="15" y="5" font-family="Cinzel" font-size="10" fill="#8b6914" font-weight="bold">BEAUTÉ</text>
+    </g>
+
+    <g transform="translate(480, 770)">
+        <path d="M-8,10 L8,10 L5,5 L-5,5 Z" fill="#b8860b" stroke="#8b6914"/>
+        <rect x="-2" y="0" width="4" height="5" fill="#d4a84b"/>
+        <rect x="-4" y="-30" width="8" height="30" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+        <g id="flamme-force" visibility="hidden">
+        <ellipse cx="0" cy="-38" rx="3" ry="6" fill="url(#grad-flamme)">
+            <animate attributeName="ry" values="5.5;6.5;6;5.5" dur="1s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="2.8;3.2;3;2.8" dur="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0.9;0.8;1" dur="0.7s" repeatCount="indefinite"/>
+        </ellipse>
+        </g>
+        <text x="-55" y="5" font-family="Cinzel" font-size="10" fill="#8b6914" font-weight="bold">FORCE</text>
+    </g>
+
+    <g transform="translate(150, 230)">
+        <!-- Ombre portée -->
+        <rect x="6" y="6" width="100" height="740" rx="4" fill="#000" opacity="0.35"/>
+        <!-- Corps principal bois -->
+        <rect x="0" y="0" width="100" height="740" rx="4" fill="url(#wood)" stroke="#1a0c05" stroke-width="2.5"/>
+        <!-- Filtre vieillissement par-dessus -->
+        <rect x="0" y="0" width="100" height="740" rx="4" fill="url(#wood)" filter="url(#wood-age)" opacity="0.5"/>
+        <!-- Reflet latéral gauche (lumière rasante) -->
+        <rect x="0" y="0" width="8" height="720" rx="2" fill="#c49a52" opacity="0.12"/>
+        <!-- Rebords sculpté haut et bas -->
+        <rect x="0" y="0"   width="100" height="22" rx="3" fill="url(#relief-banc)" stroke="#1a0c05" stroke-width="1.5"/>
+        <rect x="0" y="718" width="100" height="22" rx="3" fill="url(#relief-banc)" stroke="#1a0c05" stroke-width="1.5"/>
+        <!-- Moulure centrale décorative -->
+        <rect x="8" y="365" width="84" height="10" rx="2" fill="url(#relief-banc)" opacity="0.7"/>
+        <!-- Clous de chaise dorés aux coins -->
+        <circle cx="10" cy="11" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <circle cx="90" cy="11" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <circle cx="10" cy="729" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <circle cx="90" cy="729" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <!-- Clous intermédiaires -->
+        <circle cx="10" cy="360" r="3" fill="#c49a35" stroke="#7a5a10" stroke-width="0.8" opacity="0.8"/>
+        <circle cx="90" cy="360" r="3" fill="#c49a35" stroke="#7a5a10" stroke-width="0.8" opacity="0.8"/>
+    </g>
+    <text x="270" y="600" text-anchor="middle" font-family="Cinzel" font-size="12" fill="#3e2723" transform="rotate(-90,270,600)" font-weight="bold" opacity="0.6">COLONNE DU NORD</text>
+    
+    <g transform="translate(1010, 230)">
+        <!-- Ombre portée -->
+        <rect x="6" y="6" width="100" height="740" rx="4" fill="#000" opacity="0.35"/>
+        <!-- Corps principal bois -->
+        <rect x="0" y="0" width="100" height="740" rx="4" fill="url(#wood)" stroke="#1a0c05" stroke-width="2.5"/>
+        <!-- Filtre vieillissement par-dessus -->
+        <rect x="0" y="0" width="100" height="740" rx="4" fill="url(#wood)" filter="url(#wood-age)" opacity="0.5"/>
+        <!-- Reflet latéral gauche -->
+        <rect x="0" y="0" width="8" height="720" rx="2" fill="#c49a52" opacity="0.12"/>
+        <!-- Rebords sculpté haut et bas -->
+        <rect x="0" y="0"   width="100" height="22" rx="3" fill="url(#relief-banc)" stroke="#1a0c05" stroke-width="1.5"/>
+        <rect x="0" y="718" width="100" height="22" rx="3" fill="url(#relief-banc)" stroke="#1a0c05" stroke-width="1.5"/>
+        <!-- Moulure centrale décorative -->
+        <rect x="8" y="365" width="84" height="10" rx="2" fill="url(#relief-banc)" opacity="0.7"/>
+        <!-- Clous de chaise dorés -->
+        <circle cx="10" cy="11" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <circle cx="90" cy="11" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <circle cx="10" cy="729" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <circle cx="90" cy="729" r="4" fill="#d4a84b" stroke="#7a5a10" stroke-width="1"/>
+        <circle cx="10" cy="360" r="3" fill="#c49a35" stroke="#7a5a10" stroke-width="0.8" opacity="0.8"/>
+        <circle cx="90" cy="360" r="3" fill="#c49a35" stroke="#7a5a10" stroke-width="0.8" opacity="0.8"/>
+    </g>
+    <text x="994" y="600" text-anchor="middle" font-family="Cinzel" font-size="12" fill="#3e2723" transform="rotate(90,994,600)" font-weight="bold" opacity="0.6">COLONNE DU MIDI</text>
+
+    <!-- BUREAUX : surface bois poli avec ombre -->
+    <!-- Nord haut -->
+    <rect x="262" y="82" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="260" y="80" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="260" y="80" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="263" y="83" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+    <!-- Nord milieu -->
+    <rect x="262" y="242" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="260" y="240" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="260" y="240" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="263" y="243" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+    <!-- Nord bas -->
+    <rect x="262" y="322" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="260" y="320" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="260" y="320" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="263" y="323" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+    <!-- Midi haut -->
+    <rect x="922" y="82" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="920" y="80" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="920" y="80" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="923" y="83" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+    <!-- Midi milieu -->
+    <rect x="922" y="242" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="920" y="240" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="920" y="240" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="923" y="243" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+    <!-- Midi bas -->
+    <rect x="922" y="322" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="920" y="320" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="920" y="320" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="923" y="323" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+
+    <!-- Bureaux bas bancs : bois poli -->
+    <!-- Nord bas banc -->
+    <rect x="342" y="902" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="340" y="900" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="340" y="900" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="343" y="903" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+    <!-- Midi bas banc -->
+    <rect x="842" y="902" width="76" height="76" fill="#000" opacity="0.2" rx="2"/>
+    <rect x="840" y="900" width="76" height="76" fill="url(#grad-bureau)" stroke="#5a3210" stroke-width="2" rx="2"/>
+    <rect x="840" y="900" width="76" height="76" fill="url(#grad-bureau)" filter="url(#wood-age)" opacity="0.4" rx="2"/>
+    <rect x="843" y="903" width="70" height="70" fill="none" stroke="#c49a52" stroke-width="0.8" rx="1" opacity="0.5"/>
+
+    <!-- NAPPES BLEUES sur les bureaux -->
+    <rect x="264" y="84" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="298" y="113" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="298" y="123" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="264" y="244" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="298" y="273" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="298" y="283" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="264" y="324" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="298" y="353" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="298" y="363" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="924" y="84" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="958" y="113" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="958" y="123" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="924" y="244" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="958" y="273" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="958" y="283" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="924" y="324" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="958" y="353" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="958" y="363" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="344" y="904" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="378" y="933" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="378" y="943" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="844" y="904" width="68" height="68" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="878" y="933" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="878" y="943" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+    <rect x="590" y="88" width="80" height="62" rx="2" fill="#5599cc" opacity="0.82" stroke="#3a6a99" stroke-width="0.8"/>
+    <text x="630" y="114" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">R∴ L∴</text>
+    <text x="630" y="124" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, serif" font-size="7" fill="#f0d060" font-style="italic" font-weight="bold">JEAN MONOÏKOS</text>
+
+
+
+    <text x="630" y="1038" text-anchor="middle" font-family="Cinzel" font-size="13" fill="#3a2200" font-weight="700">OCCIDENT</text>
+
+    <!-- PORTE MAJESTUEUSE — centrée en x=630, bas du temple y=1150 -->
+    <g transform="translate(630, 1160)">
+      <!-- Encadrement pierre — montants -->
+      <rect x="-68" y="-60" width="16" height="80" rx="2" fill="#c8b89a" stroke="#8b7355" stroke-width="1"/>
+      <rect x="52"  y="-60" width="16" height="80" rx="2" fill="#c8b89a" stroke="#8b7355" stroke-width="1"/>
+      <!-- Ombre portée montants -->
+      <rect x="-68" y="-60" width="16" height="80" rx="2" fill="url(#marble-noise)" opacity="0.3"/>
+      <rect x="52"  y="-60" width="16" height="80" rx="2" fill="url(#marble-noise)" opacity="0.3"/>
+      <!-- Linteau pierre -->
+      <rect x="-68" y="-70" width="136" height="14" rx="2" fill="#c8b89a" stroke="#8b7355" stroke-width="1"/>
+      <rect x="-68" y="-70" width="136" height="14" rx="2" fill="url(#marble-noise)" opacity="0.3"/>
+      <!-- Fronton triangulaire -->
+      <polygon points="0,-100 -80,-70 80,-70" fill="#c8b89a" stroke="#8b7355" stroke-width="1.5"/>
+      <polygon points="0,-100 -80,-70 80,-70" fill="url(#marble-noise)" opacity="0.25"/>
+      <!-- Filet doré fronton -->
+      <polygon points="0,-97 -76,-70 76,-70" fill="none" stroke="#d4a84b" stroke-width="0.8" opacity="0.6"/>
+      <!-- Étoile dans le fronton -->
+      <text x="0" y="-78" text-anchor="middle" font-size="14" fill="#d4a84b" opacity="0.8">✦</text>
+
+      <!-- Vantail gauche -->
+      <rect x="-52" y="-56" width="48" height="76" rx="1" fill="#5a3210" stroke="#3a1a05" stroke-width="1.5"/>
+      <rect x="-52" y="-56" width="48" height="76" rx="1" fill="url(#wood-age)" opacity="0.5"/>
+      <!-- Moulures vantail gauche -->
+      <rect x="-48" y="-52" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <rect x="-48" y="-18" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <rect x="-26" y="-52" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <rect x="-26" y="-18" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <!-- Heurtoir gauche -->
+      <circle cx="-12" cy="0" r="3" fill="#d4a84b" stroke="#8b6914" stroke-width="0.5"/>
+
+      <!-- Vantail droit -->
+      <rect x="4"  y="-56" width="48" height="76" rx="1" fill="#5a3210" stroke="#3a1a05" stroke-width="1.5"/>
+      <rect x="4"  y="-56" width="48" height="76" rx="1" fill="url(#wood-age)" opacity="0.5"/>
+      <!-- Moulures vantail droit -->
+      <rect x="8"  y="-52" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <rect x="8"  y="-18" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <rect x="30" y="-52" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <rect x="30" y="-18" width="19" height="30" rx="1" fill="none" stroke="#8b5a28" stroke-width="0.8" opacity="0.7"/>
+      <!-- Heurtoir droit -->
+      <circle cx="12" cy="0" r="3" fill="#d4a84b" stroke="#8b6914" stroke-width="0.5"/>
+
+      <!-- Joint central -->
+      <line x1="0" y1="-56" x2="0" y2="20" stroke="#3a1a05" stroke-width="1.5"/>
+
+      <!-- Seuil -->
+      <rect x="-68" y="20" width="136" height="8" rx="1" fill="#c8b89a" stroke="#8b7355" stroke-width="1"/>
+      <rect x="-68" y="20" width="136" height="8" rx="1" fill="url(#marble-noise)" opacity="0.3"/>
+
+      <!-- Marche -->
+      <rect x="-80" y="28" width="160" height="6" rx="1" fill="#b8a88a" stroke="#8b7355" stroke-width="0.8"/>
+    </g>
+
+    <!-- CHANDELIER MENORAH 3 BRANCHES — position initiale Pas Perdus -->
+    <g id="chandelier" class="draggable" transform="translate(1270, 1240)">
+      <!-- Pied et base -->
+      <ellipse cx="0" cy="8" rx="14" ry="4" fill="url(#grad-chandelier)"/>
+      <rect x="-3" y="-5" width="6" height="13" rx="1" fill="url(#grad-chandelier)"/>
+      <ellipse cx="0" cy="-5" rx="8" ry="2.5" fill="url(#grad-chandelier)"/>
+      <!-- Tige centrale verticale -->
+      <rect x="-2" y="-52" width="4" height="47" fill="url(#grad-chandelier)"/>
+      <!-- Bras gauche : courbé vers le haut style menorah -->
+      <path d="M -2,-28 C -2,-28 -22,-28 -22,-10" fill="none" stroke="url(#grad-chandelier)" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- Tige montante gauche -->
+      <rect x="-24" y="-40" width="4" height="30" rx="1" fill="url(#grad-chandelier)"/>
+      <!-- Bras droit : courbé vers le haut style menorah -->
+      <path d="M 2,-28 C 2,-28 22,-28 22,-10" fill="none" stroke="url(#grad-chandelier)" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- Tige montante droite -->
+      <rect x="20" y="-40" width="4" height="30" rx="1" fill="url(#grad-chandelier)"/>
+      <!-- Bobèches dorées -->
+      <ellipse cx="0"   cy="-52" rx="5" ry="2" fill="url(#grad-chandelier)"/>
+      <ellipse cx="-22" cy="-40" rx="5" ry="2" fill="url(#grad-chandelier)"/>
+      <ellipse cx="22"  cy="-40" rx="5" ry="2" fill="url(#grad-chandelier)"/>
+      <!-- Bougie centrale (bleue, plus haute) -->
+      <rect x="-2.5" y="-76" width="5" height="24" rx="1" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+      <ellipse id="flamme-chandelier-centre" cx="0" cy="-84" rx="3" ry="6" fill="url(#grad-flamme)">
+        <animate attributeName="ry" values="6;7;5.5;6.5;6" dur="0.75s" repeatCount="indefinite"/>
+        <animate attributeName="rx" values="3;3.5;2.8;3.2;3" dur="0.75s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.85;1;0.9;1;0.85" dur="0.5s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- Bougie gauche (bleue) -->
+      <rect x="-24.5" y="-62" width="5" height="22" rx="1" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+      <ellipse id="flamme-chandelier-gauche" cx="-22" cy="-69" rx="3" ry="6" fill="url(#grad-flamme)">
+        <animate attributeName="ry" values="5.5;6.5;6;5.5" dur="0.9s" repeatCount="indefinite"/>
+        <animate attributeName="rx" values="2.8;3.2;3;2.8" dur="0.9s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.9;0.8;1;0.9" dur="0.6s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- Bougie droite (bleue) -->
+      <rect x="19.5" y="-62" width="5" height="22" rx="1" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+      <ellipse id="flamme-chandelier-droite" cx="22" cy="-69" rx="3" ry="6" fill="url(#grad-flamme)">
+        <animate attributeName="ry" values="6;5.5;6.5;6" dur="1s" repeatCount="indefinite"/>
+        <animate attributeName="rx" values="3;2.8;3.2;3" dur="1s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0.9;0.8;1" dur="0.7s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+
+    <!-- ── MARQUEURS AU SOL DES ÉPREUVES ── -->
+    <!-- Utilisés pour les épreuves Apprenti (eau/feu/terre) et les métaux Compagnon -->
+    <!-- Eau — côté Nord, région WP3 (490, 535) -->
+    <g id="marqueur-eau" opacity="0.55" visibility="hidden">
+      <ellipse cx="490" cy="535" rx="30" ry="10" fill="#1a4a7a" stroke="#4a9ad4" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="490" y="539" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="#7ac0f0" opacity="0.9">EAU</text>
+    </g>
+    <!-- Feu — côté Midi, région WP7 (770, 535) -->
+    <g id="marqueur-feu" opacity="0.55" visibility="hidden">
+      <ellipse cx="770" cy="535" rx="30" ry="10" fill="#7a2000" stroke="#d46020" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="770" y="539" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="#f09030" opacity="0.9">FEU</text>
+    </g>
+    <!-- Terre — Occident, région WP1 (630, 810) -->
+    <g id="marqueur-terre" opacity="0.55" visibility="hidden">
+      <ellipse cx="630" cy="810" rx="30" ry="10" fill="#5a3a10" stroke="#9a7030" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="630" y="814" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="#c49a50" opacity="0.9">TERRE</text>
+    </g>
+
+    <g class="draggable" transform="translate(1270,120)" id="pion-vm">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="28" ry="8" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="26" fill="#4682B4"/><circle cx="0" cy="0" r="26" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="23" fill="none" stroke="#d4a84b" stroke-width="2"/><g stroke="#d4a84b" stroke-width="2.8" stroke-linecap="round" fill="none"><polyline points="-12,12 -12,-12 12,-12"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8.5" fill="#3a2200" pointer-events="none">V∴M∴</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_vm.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1220,180)" id="pion-ex-maitre">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="26" ry="7.5" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="24" fill="#4682B4"/><circle cx="0" cy="0" r="24" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="21" fill="none" stroke="#c8a84b" stroke-width="1.8"/><g stroke="#d4a84b" stroke-width="2.5" stroke-linecap="round" fill="none"><polyline points="-11,11 -11,-11 11,-11"/></g><rect x="2" y="2" width="10" height="10" fill="none" stroke="#d4a84b" stroke-width="1.2"/><line x1="2" y1="6" x2="12" y2="6" stroke="#d4a84b" stroke-width="0.8"/><line x1="7" y1="2" x2="7" y2="12" stroke="#d4a84b" stroke-width="0.8"/><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8.5" fill="#3a2200" pointer-events="none">Ex-Maître</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_ex_maitre.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1320,180)" id="pion-1surv">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="26" ry="7.5" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="24" fill="#4682B4"/><circle cx="0" cy="0" r="24" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="21" fill="none" stroke="#d4a84b" stroke-width="1.8"/><g stroke="#d4a84b" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="-14" y1="2" x2="14" y2="2"/><polygon points="0,-13 -8,2 8,2" fill="none" stroke="#d4a84b" stroke-width="2"/><line x1="0" y1="2" x2="0" y2="12"/><ellipse cx="0" cy="13" rx="2.5" ry="3" fill="#d4a84b"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8" fill="#3a2200" pointer-events="none">1er Surv.</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_1surv.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1220,240)" id="pion-2surv">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="26" ry="7.5" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="24" fill="#4682B4"/><circle cx="0" cy="0" r="24" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="21" fill="none" stroke="#d4a84b" stroke-width="1.8"/><g stroke="#d4a84b" stroke-width="2.2" fill="none" stroke-linecap="round"><rect x="-4" y="-14" width="8" height="22" rx="1" fill="none" stroke="#d4a84b" stroke-width="2"/><line x1="0" y1="8" x2="0" y2="14"/><ellipse cx="0" cy="15" rx="2.5" ry="3" fill="#d4a84b"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8" fill="#3a2200" pointer-events="none">2nd Surv.</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_2surv.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1320,240)" id="pion-orateur">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="26" ry="7.5" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="24" fill="#4682B4"/><circle cx="0" cy="0" r="24" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="21" fill="none" stroke="#d4a84b" stroke-width="2.1"/><polygon points="0,-14 -10,-3 10,-3" fill="none" stroke="#d4a84b" stroke-width="2"/><g stroke="#d4a84b" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M -11,2 C -11,12 -2,13 0,13 C 2,13 11,12 11,2"/><line x1="0" y1="-3" x2="0" y2="13"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8.5" fill="#3a2200" pointer-events="none">Orateur</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_orateur.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1220,300)" id="pion-secretaire">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="26" ry="7.5" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="24" fill="#4682B4"/><circle cx="0" cy="0" r="24" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="21" fill="none" stroke="#d4a84b" stroke-width="1.8"/><g stroke="#d4a84b" stroke-width="2" fill="none" stroke-linecap="round"><path d="M -12,-13 C -8,-5 -4,2 0,13"/><path d="M -12,-13 C -5,-8 0,-4 0,13"/><path d="M 12,-13 C 8,-5 4,2 0,13"/><path d="M 12,-13 C 5,-8 0,-4 0,13"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8.5" fill="#3a2200" pointer-events="none">Secrétaire</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_secretaire.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1320,300)" id="pion-tresorier">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="24" ry="7" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="22" fill="#4682B4"/><circle cx="0" cy="0" r="22" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="19" fill="none" stroke="#c8a84b" stroke-width="1.5"/><g stroke="#d4a84b" stroke-width="2" fill="none" stroke-linecap="round"><line x1="-2" y1="-14" x2="-2" y2="10"/><circle cx="-2" cy="-11" r="5" fill="none" stroke="#d4a84b" stroke-width="2"/><line x1="6" y1="14" x2="6" y2="-10"/><circle cx="6" cy="11" r="5" fill="none" stroke="#d4a84b" stroke-width="2"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8.5" fill="#3a2200" pointer-events="none">Trésorier</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_tresorier.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1220,360)" id="pion-eleemosynaire">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="24" ry="7" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="22" fill="#4682B4"/><circle cx="0" cy="0" r="22" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="19" fill="none" stroke="#c8a84b" stroke-width="1.5"/><polygon points="0,-14 -13,8 13,8" fill="none" stroke="#d4a84b" stroke-width="2.2"/><ellipse cx="0" cy="1" rx="3" ry="4" fill="#d4a84b" opacity="0.8"/><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="7.5" fill="#3a2200" pointer-events="none">Éléemosynaire</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_eleemosynaire.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1320,360)" id="pion-mc">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="28" ry="8" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="26" fill="#4682B4"/><circle cx="0" cy="0" r="26" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="23" fill="none" stroke="#d4a84b" stroke-width="2"/><g stroke="#d4a84b" fill="none" stroke-linecap="round"><line x1="-14" y1="14" x2="14" y2="-14" stroke-width="2.5"/><line x1="14" y1="14" x2="-14" y2="-14" stroke-width="2.5"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8.5" fill="#3a2200" pointer-events="none">M.d.C</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_mc.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+
+    <g class="draggable" transform="translate(1270,420)" id="pion-econome">
+      <g class="bijou-svg"><ellipse cx="0" cy="5" rx="24" ry="7" fill="#1a0808" opacity="0.4"/><circle cx="0" cy="0" r="22" fill="#4682B4"/><circle cx="0" cy="0" r="22" fill="url(#shine-bleu-clair)"/><circle cx="0" cy="0" r="19" fill="none" stroke="#c8a84b" stroke-width="1.5"/><g stroke="#d4a84b" stroke-width="1.8" fill="none" stroke-linecap="round"><rect x="-10" y="-10" width="20" height="20" rx="2" fill="none" stroke="#d4a84b" stroke-width="1.8"/><ellipse cx="0" cy="7" rx="4" ry="2.5" fill="none" stroke="#d4a84b" stroke-width="1.2"/></g><text x="0" y="45" text-anchor="middle" font-family="Cinzel, serif" font-size="8.5" fill="#3a2200" pointer-events="none">Économe</text></g>
+      <g class="bijou-img" display="none"><image href="images/pion_econome.png" x="-28" y="-28" width="56" height="56"/></g>
+    </g>
+    <!-- ── PIONS MAÎTRES (bleus, lettre M) ── -->
+    <!-- ── PIONS MAÎTRES (bleus, liseré or) ── -->
+    <g id="pion-maitre1" class="draggable" transform="translate(1220, 520)"><circle r="26" fill="#66b3ff"/><circle r="26" fill="url(#shine-bleu-clair)"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" fill="#d4a84b" font-weight="700">M</text></g>
+    <g id="pion-maitre2" class="draggable" transform="translate(1270, 520)"><circle r="26" fill="#66b3ff"/><circle r="26" fill="url(#shine-bleu-clair)"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" fill="#d4a84b" font-weight="700">M</text></g>
+    <g id="pion-maitre3" class="draggable" transform="translate(1320, 520)"><circle r="26" fill="#66b3ff"/><circle r="26" fill="url(#shine-bleu-clair)"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" fill="#d4a84b" font-weight="700">M</text></g>
+    <g id="pion-maitre4" class="draggable" transform="translate(1220, 580)"><circle r="26" fill="#66b3ff"/><circle r="26" fill="url(#shine-bleu-clair)"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" fill="#d4a84b" font-weight="700">M</text></g>
+    <g id="pion-maitre5" class="draggable" transform="translate(1270, 580)"><circle r="26" fill="#66b3ff"/><circle r="26" fill="url(#shine-bleu-clair)"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" fill="#d4a84b" font-weight="700">M</text></g>
+    <g id="pion-maitre6" class="draggable" transform="translate(1320, 580)"><circle r="26" fill="#66b3ff"/><circle r="26" fill="url(#shine-bleu-clair)"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" fill="#d4a84b" font-weight="700">M</text></g>
+    <!-- Maître 7 : nouveau reçu, invisible par défaut -->
+    <g id="pion-maitre7" class="draggable" transform="translate(1270, 640)" visibility="hidden"><circle r="26" fill="#66b3ff"/><circle r="26" fill="url(#shine-bleu-clair)"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" fill="#d4a84b" font-weight="700">M</text></g>
+
+    <!-- ── PIONS COMPAGNONS (blancs, liseré bleu) ── -->
+    <g id="pion-comp1" class="draggable" transform="translate(1220, 720)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#66b3ff" stroke-width="3"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">C</text></g>
+    <g id="pion-comp2" class="draggable" transform="translate(1270, 720)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#66b3ff" stroke-width="3"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">C</text></g>
+    <g id="pion-comp3" class="draggable" transform="translate(1320, 720)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#66b3ff" stroke-width="3"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">C</text></g>
+    <g id="pion-comp4" class="draggable" transform="translate(1245, 780)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#66b3ff" stroke-width="3"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">C</text></g>
+    <!-- Compagnon 5 : nouveau reçu, invisible par défaut -->
+    <g id="pion-comp5" class="draggable" transform="translate(1295, 780)" visibility="hidden"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#66b3ff" stroke-width="3"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">C</text></g>
+
+    <!-- ── PIONS APPRENTIS (blancs, liseré gris) ── -->
+    <g id="pion-appr1" class="draggable" transform="translate(1220, 920)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#cccccc" stroke-width="1"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">A</text></g>
+    <g id="pion-appr2" class="draggable" transform="translate(1270, 920)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#cccccc" stroke-width="1"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">A</text></g>
+    <g id="pion-appr3" class="draggable" transform="translate(1320, 920)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#cccccc" stroke-width="1"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">A</text></g>
+    <g id="pion-appr4" class="draggable" transform="translate(1245, 980)"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#cccccc" stroke-width="1"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">A</text></g>
+    <!-- Apprenti 5 : nouveau reçu, invisible par défaut -->
+    <g id="pion-appr5" class="draggable" transform="translate(1295, 980)" visibility="hidden"><circle r="26" fill="#ffffff"/><circle r="26" fill="url(#shine-blanc)"/><circle r="23" fill="none" stroke="#cccccc" stroke-width="1"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="20" font-weight="700">A</text></g>
+
+    <!-- ── PIONS MX (vert, liseré rouge) — masqués par défaut, visibles au grade ME ── -->
+    <g id="pion-mx1"  class="draggable" transform="translate(1220, 520)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx2"  class="draggable" transform="translate(1320, 520)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx3"  class="draggable" transform="translate(1220, 600)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx4"  class="draggable" transform="translate(1320, 600)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx5"  class="draggable" transform="translate(1220, 680)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx6"  class="draggable" transform="translate(1320, 680)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx7"  class="draggable" transform="translate(1220, 760)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx8"  class="draggable" transform="translate(1320, 760)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx9"  class="draggable" transform="translate(1220, 840)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-mx10" class="draggable" transform="translate(1320, 840)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="14" fill="#f0f0f0" font-weight="700">MX</text></g>
+    <g id="pion-m"    class="draggable" transform="translate(1270, 1080)" visibility="hidden"><ellipse cx="2" cy="6" rx="26" ry="7" fill="#000" opacity="0.25"/><circle r="26" fill="#2d7a2d"/><circle r="26" fill="url(#shine-vert-me)"/><circle r="23" fill="none" stroke="#cc2200" stroke-width="2.5"/><text y="8" text-anchor="middle" font-family="Cinzel" font-size="18" fill="#f0f0f0" font-weight="700">M</text></g>
+<g id="pion-candidat" class="draggable" transform="translate(1360, 1220)" visibility="hidden">
+        <circle r="26" fill="#ffffff" stroke="#000" stroke-width="2"/>
+        <rect x="-20" y="-12" width="40" height="8" fill="#000"/>
+    </g>
+
+    <g id="pion-justice"    class="draggable" transform="translate(150,  1240)"><rect width="140" height="25" fill="#1a1208" opacity="0.9" rx="3"/><text x="70" y="16" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#d4a84b">JUSTICE</text></g>
+    <g id="pion-clemence"   class="draggable" transform="translate(300, 1240)"><rect width="140" height="25" fill="#1a1208" opacity="0.9" rx="3"/><text x="70" y="16" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#d4a84b">CLÉMENCE</text></g>
+
+    <!-- Coussin bleu clair avec liseré or et équerre — réception Apprenti -->
+    <!-- Position initiale hors champ, déposé en 633,272 au décor réception -->
+    <g id="pion-coussin" class="draggable" transform="translate(450, 1210)">
+      <image href="images/coussin.png" x="-31" y="-22" width="62" height="47" preserveAspectRatio="xMidYMid meet"/>
+    </g>
+
+    <!-- Élément EAU — réception Apprenti, région nord (WP3=420,565 → +70 à droite) -->
+    <g id="pion-eau" class="draggable" transform="translate(200, 1210)">
+      <ellipse cx="0" cy="4" rx="22" ry="6" fill="#0a1a2a" opacity="0.3"/>
+      <circle cx="0" cy="0" r="20" fill="#1a4a7a" stroke="#4a9ad4" stroke-width="2"/>
+      <circle cx="0" cy="0" r="20" fill="url(#shine-bleu-clair)" opacity="0.4"/>
+      <!-- Goutte d'eau stylisée -->
+      <path d="M0,-12 C-8,-4 -10,4 0,10 C10,4 8,-4 0,-12 Z" fill="#7ac0f0" opacity="0.9"/>
+      <text x="0" y="33" text-anchor="middle" font-family="Cinzel, serif" font-size="7.5" fill="#3a2200" pointer-events="none">eau</text>
+    </g>
+
+    <!-- Élément FEU — réception Apprenti, région midi (WP7=840,565 → -70 à gauche) -->
+    <g id="pion-feu" class="draggable" transform="translate(250, 1210)">
+      <ellipse cx="0" cy="4" rx="22" ry="6" fill="#2a0a00" opacity="0.3"/>
+      <circle cx="0" cy="0" r="20" fill="#7a2000" stroke="#d46020" stroke-width="2"/>
+      <circle cx="0" cy="0" r="20" fill="url(#shine-bleu-clair)" opacity="0.2"/>
+      <!-- Flamme stylisée -->
+      <path d="M0,-13 C-6,-6 -8,2 0,8 C8,2 6,-6 0,-13 Z" fill="#f09030" opacity="0.95"/>
+      <path d="M0,-8 C-3,-3 -4,1 0,5 C4,1 3,-3 0,-8 Z" fill="#ffd060" opacity="0.9"/>
+      <text x="0" y="33" text-anchor="middle" font-family="Cinzel, serif" font-size="7.5" fill="#3a2200" pointer-events="none">feu</text>
+    </g>
+
+    <!-- Élément TERRE — réception Apprenti (WP1=630,830 → 20 au-dessus) -->
+    <g id="pion-terre" class="draggable" transform="translate(300, 1210)">
+      <ellipse cx="0" cy="4" rx="22" ry="6" fill="#1a1000" opacity="0.3"/>
+      <circle cx="0" cy="0" r="20" fill="#5a3a10" stroke="#9a7030" stroke-width="2"/>
+      <circle cx="0" cy="0" r="20" fill="url(#shine-bleu-clair)" opacity="0.15"/>
+      <!-- Carré symbolisant la terre -->
+      <rect x="-9" y="-9" width="18" height="18" rx="2" fill="#8a6020" stroke="#c49a50" stroke-width="1.5" opacity="0.9"/>
+      <text x="0" y="33" text-anchor="middle" font-family="Cinzel, serif" font-size="7.5" fill="#3a2200" pointer-events="none">terre</text>
+    </g>
+
+    <!-- Petite bougie mobile — utilisée pendant la réception -->
+    <g id="pion-bougie" class="draggable" transform="translate(350, 1210)">
+      <ellipse cx="0" cy="4" rx="12" ry="4" fill="#1a1000" opacity="0.3"/>
+      <!-- Corps de la bougie -->
+      <rect x="-6" y="-8" width="12" height="16" rx="2" fill="#f0e8d0" stroke="#c8b060" stroke-width="1.5"/>
+      <!-- Halo lumineux -->
+      <circle cx="0" cy="-14" r="18" fill="#ffa020" opacity="0">
+        <animate attributeName="opacity" values="0.15;0.25;0.12;0.22;0.15" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="18;22;17;21;18" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Flamme extérieure (vacille) -->
+      <path fill="#f0a020" opacity="0.95">
+        <animate attributeName="d"
+          values="M0,-12 C-3,-7 -4,-2 0,0 C4,-2 3,-7 0,-12 Z;
+                  M-1,-13 C-4,-8 -3,-2 0,0 C3,-2 4,-7 -1,-13 Z;
+                  M1,-11 C-2,-6 -4,-1 0,1 C4,-1 3,-8 1,-11 Z;
+                  M0,-12 C-3,-7 -4,-2 0,0 C4,-2 3,-7 0,-12 Z"
+          dur="0.8s" repeatCount="indefinite"/>
+      </path>
+      <!-- Flamme intérieure (vacille) -->
+      <path fill="#fff0a0" opacity="0.85">
+        <animate attributeName="d"
+          values="M0,-10 C-1.5,-7 -2,-3 0,-1 C2,-3 1.5,-7 0,-10 Z;
+                  M-0.5,-11 C-2,-7.5 -1.5,-3 0,-1 C1.5,-3 2,-8 -0.5,-11 Z;
+                  M0.5,-9.5 C-1,-6.5 -2,-2.5 0,0 C2,-2.5 1,-7 0.5,-9.5 Z;
+                  M0,-10 C-1.5,-7 -2,-3 0,-1 C2,-3 1.5,-7 0,-10 Z"
+          dur="0.6s" repeatCount="indefinite"/>
+      </path>
+      <!-- Mèche -->
+      <line x1="0" y1="-8" x2="0" y2="-14" stroke="#5a3a10" stroke-width="1"/>
+    </g>
+    <g id="pion-temperance" class="draggable" transform="translate(450, 1240)" visibility="hidden"><rect width="140" height="25" fill="#1a1208" opacity="0.9" rx="3"/><text x="70" y="16" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#d4a84b">TEMPÉRANCE</text></g>
+    <g id="pion-prudence"   class="draggable" transform="translate(600, 1240)" visibility="hidden"><rect width="140" height="25" fill="#1a1208" opacity="0.9" rx="3"/><text x="70" y="16" text-anchor="middle" font-family="Cinzel" font-size="11" fill="#d4a84b">PRUDENCE</text></g>
+
+    <!-- CIERGES — en fin de SVG pour toujours être au-dessus -->
+    <g id="cierge-secretaire" class="draggable" transform="translate(920, 1240)">
+        <path d="M-8,10 L8,10 L5,5 L-5,5 Z" fill="#b8860b" stroke="#8b6914"/>
+        <rect x="-2" y="0" width="4" height="5" fill="#d4a84b"/>
+        <rect x="-4" y="-30" width="8" height="30" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+        <ellipse id="flamme-cierge-secretaire" cx="0" cy="-38" rx="3" ry="6" fill="url(#grad-flamme)">
+            <animate attributeName="ry" values="5.5;6.5;6;5.5" dur="1s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="2.8;3.2;3;2.8" dur="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0.9;0.8;1" dur="0.7s" repeatCount="indefinite"/>
+        </ellipse>
+    </g>
+    <g id="cierge-2surv" class="draggable" transform="translate(1040, 1240)">
+        <path d="M-8,10 L8,10 L5,5 L-5,5 Z" fill="#b8860b" stroke="#8b6914"/>
+        <rect x="-2" y="0" width="4" height="5" fill="#d4a84b"/>
+        <rect x="-4" y="-30" width="8" height="30" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+        <ellipse id="flamme-cierge-2surv" cx="0" cy="-38" rx="3" ry="6" fill="url(#grad-flamme)">
+            <animate attributeName="ry" values="6.5;6;7;6.5" dur="0.9s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="3.2;3;3.5;3.2" dur="0.9s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9;0.8;1;0.9" dur="0.6s" repeatCount="indefinite"/>
+        </ellipse>
+    </g>
+    <g id="cierge-1surv" class="draggable" transform="translate(1160, 1240)">
+        <path d="M-8,10 L8,10 L5,5 L-5,5 Z" fill="#b8860b" stroke="#8b6914"/>
+        <rect x="-2" y="0" width="4" height="5" fill="#d4a84b"/>
+        <rect x="-4" y="-30" width="8" height="30" fill="#66b3ff" stroke="#4a7abf" stroke-width="0.5"/>
+        <ellipse id="flamme-cierge-1surv" cx="0" cy="-38" rx="3" ry="6" fill="url(#grad-flamme)">
+            <animate attributeName="ry" values="6;7;5.5;6.5;6" dur="0.85s" repeatCount="indefinite"/>
+            <animate attributeName="rx" values="3;3.5;2.8;3.2;3" dur="0.85s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;1;0.9;1;0.8" dur="0.55s" repeatCount="indefinite"/>
+        </ellipse>
+    </g>
+
+    <!-- Bible ouverte — coin inférieur droit de l'autel -->
+    <g id="bible-ouverte" transform="translate(661, 141)">
+      <!-- Page gauche -->
+      <path d="M0,0 C0,-1 -7,-1.5 -10,0 L-10,8 C-7,6.5 0,7 0,8 Z" fill="#f5ecd7" stroke="#c8a84b" stroke-width="0.4"/>
+      <!-- Page droite -->
+      <path d="M0,0 C0,-1 7,-1.5 10,0 L10,8 C7,6.5 0,7 0,8 Z" fill="#f0e6c8" stroke="#c8a84b" stroke-width="0.4"/>
+      <!-- Reliure centrale -->
+      <line x1="0" y1="-1" x2="0" y2="8" stroke="#8b6914" stroke-width="0.8"/>
+      <!-- Lignes de texte page gauche -->
+      <line x1="-8.5" y1="2"   x2="-1.5" y2="2"   stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+      <line x1="-8.5" y1="3.5" x2="-1.5" y2="3.5" stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+      <line x1="-8.5" y1="5"   x2="-1.5" y2="5"   stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+      <line x1="-8.5" y1="6.5" x2="-1.5" y2="6.5" stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+      <!-- Lignes de texte page droite -->
+      <line x1="1.5" y1="2"   x2="8.5" y2="2"   stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+      <line x1="1.5" y1="3.5" x2="8.5" y2="3.5" stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+      <line x1="1.5" y1="5"   x2="8.5" y2="5"   stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+      <line x1="1.5" y1="6.5" x2="8.5" y2="6.5" stroke="#9a7a40" stroke-width="0.3" opacity="0.7"/>
+    </g>
+    <!-- Bible fermée — même position, masquée par défaut -->
+    <g id="bible-fermee" transform="translate(661, 141)" visibility="hidden">
+      <!-- Corps du livre fermé -->
+      <rect x="-10" y="0" width="20" height="8" rx="0.5" fill="#8b2020" stroke="#5a1010" stroke-width="0.5"/>
+      <!-- Tranche dorée (bas) -->
+      <rect x="-9.5" y="7" width="19" height="1.5" rx="0.3" fill="#c8a84b" opacity="0.8"/>
+      <!-- Reliure (dos) — ligne gauche -->
+      <rect x="-10" y="0" width="1.5" height="8" rx="0.3" fill="#6a1818" stroke="#5a1010" stroke-width="0.3"/>
+      <!-- Filet doré sur la couverture -->
+      <rect x="-8" y="1" width="17" height="6" rx="0.3" fill="none" stroke="#c8a84b" stroke-width="0.3" opacity="0.7"/>
+      <!-- Petite croix dorée au centre -->
+      <line x1="0" y1="2.2" x2="0" y2="5.8" stroke="#c8a84b" stroke-width="0.5" opacity="0.9"/>
+      <line x1="-1.5" y1="3.5" x2="1.5" y2="3.5" stroke="#c8a84b" stroke-width="0.5" opacity="0.9"/>
+    </g>
+
+    <!-- MIROIR — grade de Compagnon, masqué par défaut -->
+    <g id="miroir" transform="translate(458, 1100)" visibility="hidden">
+      <!-- Ombre portée -->
+      <ellipse cx="2" cy="32" rx="22" ry="5" fill="#000" opacity="0.35"/>
+      <!-- Pied — socle -->
+      <rect x="-10" y="26" width="20" height="4" rx="2" fill="url(#grad-bureau)" stroke="#5a3a10" stroke-width="0.8"/>
+      <!-- Tige centrale -->
+      <rect x="-2" y="6" width="4" height="22" rx="1" fill="url(#grad-bureau)" stroke="#5a3a10" stroke-width="0.6"/>
+      <!-- Bras de support (deux montants latéraux) -->
+      <line x1="-8" y1="8" x2="-8" y2="20" stroke="#8b6914" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1=" 8" y1="8" x2=" 8" y2="20" stroke="#8b6914" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- Charnières -->
+      <circle cx="-8" cy="8" r="2" fill="#d4a84b" stroke="#8b6914" stroke-width="0.5"/>
+      <circle cx=" 8" cy="8" r="2" fill="#d4a84b" stroke="#8b6914" stroke-width="0.5"/>
+      <!-- Cadre du miroir — bois doré -->
+      <rect x="-18" y="-26" width="36" height="36" rx="3" fill="url(#grad-bureau)" stroke="#d4a84b" stroke-width="1.5"/>
+      <!-- Filet intérieur doré -->
+      <rect x="-15" y="-23" width="30" height="30" rx="2" fill="none" stroke="#d4a84b" stroke-width="0.6" opacity="0.7"/>
+      <!-- Glace — reflet argenté avec dégradé -->
+      <defs>
+        <linearGradient id="grad-miroir" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stop-color="#e8eef5" stop-opacity="0.95"/>
+          <stop offset="40%"  stop-color="#c8d8e8" stop-opacity="0.85"/>
+          <stop offset="70%"  stop-color="#d8e8f5" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#b0c4d8" stop-opacity="0.8"/>
+        </linearGradient>
+        <linearGradient id="grad-reflet" x1="0%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%"   stop-color="#fff" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <rect x="-14" y="-22" width="28" height="28" rx="1.5" fill="url(#grad-miroir)"/>
+      <!-- Reflet lumineux diagonale -->
+      <rect x="-14" y="-22" width="28" height="28" rx="1.5" fill="url(#grad-reflet)"/>
+      <!-- Éclat de lumière coin haut gauche -->
+      <ellipse cx="-9" cy="-17" rx="4" ry="2.5" fill="#fff" opacity="0.5" transform="rotate(-30,-9,-17)"/>
+      <!-- Inscription au-dessus du miroir -->
+      <text x="0" y="-30" text-anchor="middle" font-family="Cinzel, serif" font-size="5.5" fill="#d4a84b" font-style="italic">Connais-toi toi-même</text>
+    </g>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ÉLÉMENTS DU GRADE DE MAÎTRE — masqués par défaut                  -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <g id="elements-maitre" visibility="hidden">
+
+      <!-- TABLEAU DU GRADE — IN SILENTIO ET SPE (remplace DIRIGIT OBLIQUA) -->
+      <image id="tableau-maitre" x="580" y="154" width="107" height="80"
+             href="images/tableau_maitre.png" preserveAspectRatio="xMidYMid meet" visibility="hidden"/>
+
+      <!-- ── GRAND CHANDELIER NORD-OUEST (angle NO du tapis x≈510 y≈355) -->
+      <g id="chandelier-no" transform="translate(510, 358)">
+        <!-- Pied -->
+        <polygon points="0,14 -14,14 -7,-2" fill="#1a1a1a" stroke="#555" stroke-width="0.8"/>
+        <!-- Tige -->
+        <rect x="-1.5" y="-18" width="3" height="20" fill="#333" stroke="#555" stroke-width="0.5"/>
+        <!-- Plateau triangulaire -->
+        <polygon points="0,-20 -12,-10 12,-10" fill="#222" stroke="#888" stroke-width="0.8"/>
+        <!-- 3 bougies en triangle -->
+        <rect x="-1.5" y="-40" width="3" height="18" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="-10" y="-32" width="3" height="10" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="8" y="-32" width="3" height="10" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <!-- Flammes -->
+        <ellipse id="fl-no-1" cx="0" cy="-42" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="4;4.5;3.5;4" dur="0.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.9;1;0.8;0.9" dur="0.6s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse id="fl-no-2" cx="-8.5" cy="-34" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="4;3.5;4.5;4" dur="0.9s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.8;1;0.9;0.8" dur="0.7s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse id="fl-no-3" cx="9.5" cy="-34" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="3.5;4.5;4;3.5" dur="0.85s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0.8;0.9;1" dur="0.65s" repeatCount="indefinite"/>
+        </ellipse>
+      </g>
+
+      <!-- ── GRAND CHANDELIER NORD-EST (angle NE du tapis x≈752 y≈355) -->
+      <g id="chandelier-ne" transform="translate(752, 358)">
+        <polygon points="0,14 -14,14 -7,-2" fill="#1a1a1a" stroke="#555" stroke-width="0.8"/>
+        <rect x="-1.5" y="-18" width="3" height="20" fill="#333" stroke="#555" stroke-width="0.5"/>
+        <polygon points="0,-20 -12,-10 12,-10" fill="#222" stroke="#888" stroke-width="0.8"/>
+        <rect x="-1.5" y="-40" width="3" height="18" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="-10" y="-32" width="3" height="10" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="8" y="-32" width="3" height="10" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <ellipse id="fl-ne-1" cx="0" cy="-42" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="4;4.5;3.5;4" dur="0.75s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse id="fl-ne-2" cx="-8.5" cy="-34" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="4;3.5;4.5;4" dur="0.95s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse id="fl-ne-3" cx="9.5" cy="-34" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="3.5;4.5;4;3.5" dur="0.82s" repeatCount="indefinite"/>
+        </ellipse>
+      </g>
+
+      <!-- ── GRAND CHANDELIER SUD-OUEST (angle SO du tapis x≈510 y≈778) -->
+      <g id="chandelier-so" transform="translate(510, 778)">
+        <polygon points="0,14 -14,14 -7,-2" fill="#1a1a1a" stroke="#555" stroke-width="0.8"/>
+        <rect x="-1.5" y="-18" width="3" height="20" fill="#333" stroke="#555" stroke-width="0.5"/>
+        <polygon points="0,-20 -12,-10 12,-10" fill="#222" stroke="#888" stroke-width="0.8"/>
+        <rect x="-1.5" y="-40" width="3" height="18" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="-10" y="-32" width="3" height="10" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="8" y="-32" width="3" height="10" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <ellipse id="fl-so-1" cx="0" cy="-42" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="4;3.5;4.5;4" dur="0.88s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse id="fl-so-2" cx="-8.5" cy="-34" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="4.5;4;3.5;4.5" dur="0.72s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse id="fl-so-3" cx="9.5" cy="-34" rx="2" ry="4" fill="url(#grad-flamme)">
+          <animate attributeName="ry" values="3.5;4;4.5;3.5" dur="0.9s" repeatCount="indefinite"/>
+        </ellipse>
+      </g>
+
+      <!-- ── CERCUEIL (centre du tapis x≈630 y≈565) -->
+      <g id="cercueil" transform="translate(630, 565)">
+        <!-- Corps du cercueil -->
+        <rect x="-45" y="-20" width="90" height="40" rx="4" fill="#1a1a1a" stroke="#555" stroke-width="1.5"/>
+        <!-- Drap noir bordé blanc + croix blanche -->
+        <rect x="-44" y="-19" width="88" height="38" rx="3" fill="#111" stroke="#eee" stroke-width="0.8"/>
+        <!-- Croix blanche -->
+        <line x1="0" y1="-19" x2="0" y2="19" stroke="#eee" stroke-width="2"/>
+        <line x1="-44" y1="0" x2="44" y2="0" stroke="#eee" stroke-width="2"/>
+        <!-- Tête de mort côté Occident (gauche) -->
+        <circle cx="-25" cy="-5" r="6" fill="#ddd" stroke="#999" stroke-width="0.5"/>
+        <circle cx="-27" cy="-7" r="1.5" fill="#333"/>
+        <circle cx="-23" cy="-7" r="1.5" fill="#333"/>
+        <line x1="-27" y1="-1" x2="-23" y2="-1" stroke="#333" stroke-width="1.5"/>
+        <!-- Os en sautoir -->
+        <line x1="-29" y1="4" x2="-21" y2="10" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="-21" y1="4" x2="-29" y2="10" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Branche d'acacia côté Orient (droite) -->
+        <line x1="20" y1="8" x2="28" y2="-8" stroke="#2d5a1b" stroke-width="1.5"/>
+        <ellipse cx="22" cy="4" rx="3" ry="2" fill="#3a7a25" transform="rotate(-20,22,4)"/>
+        <ellipse cx="25" cy="-2" rx="3" ry="2" fill="#3a7a25" transform="rotate(-30,25,-2)"/>
+        <ellipse cx="27" cy="-7" rx="2.5" ry="1.8" fill="#3a7a25" transform="rotate(-40,27,-7)"/>
+        <!-- Lame dorée triangulaire JA au centre -->
+        <polygon points="0,-8 -6,6 6,6" fill="#d4a84b" stroke="#8b6914" stroke-width="0.5" opacity="0.9"/>
+        <text x="0" y="3" text-anchor="middle" font-family="Cinzel,serif" font-size="5" fill="#1a1a00" font-weight="bold">JA</text>
+      </g>
+
+      <!-- ── MAUSOLÉE / TOMBEAU (Occident, x≈630 y≈920) -->
+      <g id="mausolee" transform="translate(630, 920)">
+        <!-- Base triangulaire 3 degrés -->
+        <rect x="-35" y="8"  width="70" height="6"  rx="1" fill="#2a2a2a" stroke="#888" stroke-width="0.8"/>
+        <rect x="-28" y="2"  width="56" height="6"  rx="1" fill="#333" stroke="#888" stroke-width="0.8"/>
+        <rect x="-21" y="-4" width="42" height="6"  rx="1" fill="#3a3a3a" stroke="#888" stroke-width="0.8"/>
+        <!-- Pyramide triangulaire -->
+        <polygon points="0,-28 -18,-4 18,-4" fill="#222" stroke="#aaa" stroke-width="1"/>
+        <polygon points="0,-28 -18,-4 18,-4" fill="none" stroke="#d4a84b" stroke-width="0.5" opacity="0.6"/>
+        <!-- Urne sépulcrale -->
+        <ellipse cx="0" cy="-32" rx="7" ry="4" fill="#333" stroke="#aaa" stroke-width="0.8"/>
+        <rect x="-5" y="-42" width="10" height="12" rx="2" fill="#2a2a2a" stroke="#aaa" stroke-width="0.8"/>
+        <ellipse cx="0" cy="-42" rx="6" ry="2.5" fill="#333" stroke="#aaa" stroke-width="0.5"/>
+        <!-- Vapeur enflammée -->
+        <ellipse id="fl-urne" cx="0" cy="-48" rx="2.5" ry="5" fill="#ff8833" opacity="0.8">
+          <animate attributeName="ry" values="5;6;4;5" dur="0.7s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.8;1;0.6;0.8" dur="0.5s" repeatCount="indefinite"/>
+        </ellipse>
+        <!-- 3 boules aux angles (couleur jaune) -->
+        <circle cx="-35" cy="14" r="3" fill="#d4a84b"/>
+        <circle cx="35"  cy="14" r="3" fill="#d4a84b"/>
+        <circle cx="0"   cy="14" r="3" fill="#d4a84b"/>
+        <!-- Inscription supérieure -->
+        <text x="0" y="-56" text-anchor="middle" font-family="Cinzel,serif" font-size="4.5" fill="#d4a84b">DEPONENS ALIENA ASCENDIT UNUS</text>
+        <!-- Inscription inférieure -->
+        <text x="0" y="22" text-anchor="middle" font-family="Cinzel,serif" font-size="4" fill="#aaa">TERNARIO FORMATUS NOVENARIO DISSOLVITUR</text>
+        <!-- PENSEZ DONC A LA MORT -->
+        <text x="0" y="-62" text-anchor="middle" font-family="Cinzel,serif" font-size="5" fill="#d4a84b" font-weight="bold">PENSEZ DONC A LA MORT</text>
+      </g>
+
+      <!-- ── LANTERNE SOURDE (près du VM, x≈700 y≈180) -->
+      <g id="lanterne-sourde" transform="translate(700, 180)">
+        <!-- Corps de la lanterne -->
+        <rect x="-8" y="-12" width="16" height="18" rx="2" fill="#1a1400" stroke="#8b6914" stroke-width="1"/>
+        <!-- Vitre -->
+        <rect x="-5" y="-9" width="10" height="10" rx="1" fill="#ffdd88" opacity="0.4"/>
+        <!-- Flamme intérieure -->
+        <ellipse cx="0" cy="-4" rx="2" ry="3" fill="#ffaa44" opacity="0.7">
+          <animate attributeName="opacity" values="0.7;0.9;0.6;0.7" dur="0.6s" repeatCount="indefinite"/>
+        </ellipse>
+        <!-- Poignée -->
+        <rect x="-1" y="-16" width="2" height="6" fill="#8b6914"/>
+      </g>
+
+      <!-- ── TERRINE OCCIDENT (devant mausolée x≈585 y≈950) -->
+      <g id="terrine-occident" transform="translate(585, 950)">
+        <ellipse cx="0" cy="4" rx="12" ry="4" fill="#222" stroke="#666" stroke-width="0.8"/>
+        <rect x="-10" y="-4" width="20" height="8" rx="2" fill="#1a1a1a" stroke="#666" stroke-width="0.8"/>
+        <ellipse cx="0" cy="-4" rx="10" ry="3" fill="#1a1a1a" stroke="#666" stroke-width="0.5"/>
+        <!-- Flamme esprit de vin bleue -->
+        <ellipse id="fl-terrine-o" cx="0" cy="-9" rx="5" ry="6" fill="#4488ff" opacity="0.7">
+          <animate attributeName="ry" values="6;7;5;6" dur="0.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.9;0.5;0.7" dur="0.4s" repeatCount="indefinite"/>
+        </ellipse>
+      </g>
+
+      <!-- ── TERRINE ORIENT (extrémité orientale du tapis x≈672 y≈420) -->
+      <g id="terrine-orient" transform="translate(672, 420)">
+        <ellipse cx="0" cy="4" rx="12" ry="4" fill="#222" stroke="#666" stroke-width="0.8"/>
+        <rect x="-10" y="-4" width="20" height="8" rx="2" fill="#1a1a1a" stroke="#666" stroke-width="0.8"/>
+        <ellipse cx="0" cy="-4" rx="10" ry="3" fill="#1a1a1a" stroke="#666" stroke-width="0.5"/>
+        <ellipse id="fl-terrine-e" cx="0" cy="-9" rx="5" ry="6" fill="#4488ff" opacity="0.7">
+          <animate attributeName="ry" values="5;7;6;5" dur="0.65s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.6;0.9;0.7;0.6" dur="0.45s" repeatCount="indefinite"/>
+        </ellipse>
+      </g>
+
+    </g><!-- fin elements-maitre -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ÉLÉMENTS DU GRADE DE MAÎTRE ÉCOSSAIS — masqués par défaut          -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <g id="elements-me" visibility="hidden">
+
+      <!-- TABLEAU DU GRADE ME -->
+      <image id="tableau-me" x="580" y="154" width="107" height="80"
+             href="images/tableau_me.png" preserveAspectRatio="xMidYMid meet" visibility="hidden"/>
+
+      <!-- ── 4 FLAMBEAUX AUX ANGLES DU TAPIS (forme carrée) ── -->
+      <!-- Tapis : x:495 y:340, 270×450 → angles NO(495,340) NE(765,340) SO(495,790) SE(765,790) -->
+
+      <!-- Flambeau angle NO -->
+      <g id="flambeau-me-no" transform="translate(495, 340)">
+        <rect x="-10" y="0" width="20" height="18" rx="2" fill="#2a1800" stroke="#8b6914" stroke-width="1"/>
+        <rect x="-8"  y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="-8"  y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <ellipse cx="-5" cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;5;3;4" dur="0.8s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;4;5;3" dur="0.9s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-5" cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;3;5;4" dur="0.75s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;4;3;5" dur="0.85s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+      <!-- Flambeau angle NE -->
+      <g id="flambeau-me-ne" transform="translate(765, 340)">
+        <rect x="-10" y="0" width="20" height="18" rx="2" fill="#2a1800" stroke="#8b6914" stroke-width="1"/>
+        <rect x="-8"  y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="-8"  y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <ellipse cx="-5" cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;4;3;5" dur="0.82s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;5;3;4" dur="0.7s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-5" cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;5;4;3" dur="0.88s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;3;5;4" dur="0.95s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+      <!-- Flambeau angle SO -->
+      <g id="flambeau-me-so" transform="translate(495, 790)">
+        <rect x="-10" y="0" width="20" height="18" rx="2" fill="#2a1800" stroke="#8b6914" stroke-width="1"/>
+        <rect x="-8"  y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="-8"  y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <ellipse cx="-5" cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;4;5;3" dur="0.78s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;3;4;5" dur="0.92s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-5" cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;5;3;4" dur="0.86s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;4;5;3" dur="0.72s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+      <!-- Flambeau angle SE -->
+      <g id="flambeau-me-se" transform="translate(765, 790)">
+        <rect x="-10" y="0" width="20" height="18" rx="2" fill="#2a1800" stroke="#8b6914" stroke-width="1"/>
+        <rect x="-8"  y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-22" width="6" height="22" fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="-8"  y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <rect x="2"   y="-30" width="6" height="8"  fill="#e8e0c8" stroke="#ccc" stroke-width="0.3"/>
+        <ellipse cx="-5" cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;3;5;4" dur="0.83s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-33" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;5;4;3" dur="0.77s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-5" cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;4;3;5" dur="0.91s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="5"  cy="-25" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;5;3;4" dur="0.68s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+      <!-- ── 16 BOUGIES SUR LES 4 MURS (4 par face, au milieu de chaque paroi) ── -->
+      <!-- Face NORD (y≈145) — 4 bougies groupées centrées -->
+      <g id="bougies-nord" transform="translate(630, 145)">
+        <rect x="-42" y="-20" width="84" height="6" rx="1" fill="#2a1800" stroke="#8b6914" stroke-width="0.8"/>
+        <rect x="-36" y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <rect x="-14" y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <rect x="8"   y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <rect x="30"  y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <ellipse cx="-33" cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;5;3;4" dur="0.8s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-11" cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;4;5;3" dur="0.85s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="11"  cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;3;4;5" dur="0.72s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="33"  cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;3;5;4" dur="0.91s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+      <!-- Face SUD/MIDI (y≈1000) -->
+      <g id="bougies-sud" transform="translate(630, 1000)">
+        <rect x="-42" y="-20" width="84" height="6" rx="1" fill="#2a1800" stroke="#8b6914" stroke-width="0.8"/>
+        <rect x="-36" y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <rect x="-14" y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <rect x="8"   y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <rect x="30"  y="-34" width="6" height="16" fill="#e8e0c8"/>
+        <ellipse cx="-33" cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;4;3;5" dur="0.76s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-11" cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;5;4;3" dur="0.88s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="11"  cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;3;5;4" dur="0.82s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="33"  cy="-37" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;4;5;3" dur="0.95s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+      <!-- Face OUEST (x≈200) -->
+      <g id="bougies-ouest" transform="translate(200, 565)">
+        <rect x="-6" y="-42" width="12" height="84" rx="1" fill="#2a1800" stroke="#8b6914" stroke-width="0.8"/>
+        <rect x="-16" y="-36" width="6" height="16" fill="#e8e0c8" transform="rotate(90,-10,-28)"/>
+        <rect x="-16" y="-14" width="6" height="16" fill="#e8e0c8" transform="rotate(90,-10,-6)"/>
+        <rect x="-16" y="8"   width="6" height="16" fill="#e8e0c8" transform="rotate(90,-10,16)"/>
+        <rect x="-16" y="30"  width="6" height="16" fill="#e8e0c8" transform="rotate(90,-10,38)"/>
+        <!-- Flammes verticales côté gauche -->
+        <ellipse cx="-22" cy="-28" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;5;3;4" dur="0.81s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-22" cy="-6"  rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;4;5;3" dur="0.74s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-22" cy="16"  rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;3;4;5" dur="0.89s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="-22" cy="38"  rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;3;5;4" dur="0.77s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+      <!-- Face EST/ORIENT (x≈1060) -->
+      <g id="bougies-est" transform="translate(1060, 565)">
+        <rect x="-6" y="-42" width="12" height="84" rx="1" fill="#2a1800" stroke="#8b6914" stroke-width="0.8"/>
+        <rect x="10" y="-36" width="6" height="16" fill="#e8e0c8" transform="rotate(-90,13,-28)"/>
+        <rect x="10" y="-14" width="6" height="16" fill="#e8e0c8" transform="rotate(-90,13,-6)"/>
+        <rect x="10" y="8"   width="6" height="16" fill="#e8e0c8" transform="rotate(-90,13,16)"/>
+        <rect x="10" y="30"  width="6" height="16" fill="#e8e0c8" transform="rotate(-90,13,38)"/>
+        <ellipse cx="22" cy="-28" rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;5;4;3" dur="0.84s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="22" cy="-6"  rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="5;4;3;5" dur="0.79s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="22" cy="16"  rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="4;3;5;4" dur="0.92s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="22" cy="38"  rx="2" ry="4" fill="url(#grad-flamme)"><animate attributeName="ry" values="3;4;5;3" dur="0.86s" repeatCount="indefinite"/></ellipse>
+      </g>
+
+    </g><!-- fin elements-me -->
+
+  <!-- Voile d'obscurcissement — opacity contrôlée par obscurcir() -->
+  <rect id="voile-obscurite" x="0" y="0" width="100%" height="100%"
+        fill="black" opacity="0" pointer-events="none"/>
+
+  <!-- Cartouche d'état — affiché au-dessus de la loge, mis à jour par _setEtape() -->
+  <text id="svg-etape-courante"
+        x="615" y="-12"
+        text-anchor="middle"
+        font-family="Cinzel, serif" font-size="22" font-style="italic"
+        fill="#d4a84b" opacity="0.85"
+        pointer-events="none"></text>
+
+  </svg>
+</div>
+
+</div>
+
+<!-- PANNEAU GAUCHE : régie (rempli dynamiquement) -->
+<div id="regie-panel" style="position:fixed; top:0; left:0; width:270px; height:100%; background:#1a1a1a; border-right:3px solid gold; overflow-y:auto; box-shadow:5px 0 15px rgba(0,0,0,0.5); z-index:9999; display:none;">
+    <div style="padding:14px; background:#222; border-bottom:1px solid gold; text-align:center; position:sticky; top:0; z-index:1;">
+        <h3 id="regie-titre" style="color:gold; margin:0; font-family:serif; letter-spacing:2px; font-size:1em;">🏛️ RITUEL R.E.R.</h3>
+    </div>
+    <div id="menu-regie" style="padding:12px;"></div>
+</div>
+
+<!-- PANNEAU CATÉCHISME : entre régie et loge -->
+<div id="panneau-catechisme" style="position:fixed; top:0; left:270px; width:425px; height:100%; background:#12100a; border-right:2px solid #3a2a0a; overflow-y:auto; z-index:9998; display:none;">
+    <div style="padding:10px 12px; background:#1a1400; border-bottom:1px solid #3a2a0a; text-align:center; position:sticky; top:0;">
+        <span style="color:#d4a84b; font-family:'Cinzel',serif; font-size:0.8em; letter-spacing:2px;">📖 CATÉCHISME</span>
+    </div>
+    <div id="contenu-catechisme" style="padding:10px;"></div>
+</div>
+
+<!-- PANNEAU DROIT : flux de dialogue -->
+<div id="panneau-dialogue" style="position:fixed; top:0; right:0; width:540px; height:100%; background:#111; border-left:2px solid #3a2a0a; display:flex; flex-direction:column; z-index:9999; display:none;">
+    <div style="padding:10px 14px; background:#1a1400; border-bottom:1px solid #3a2a0a; text-align:center; position:sticky; top:0;">
+        <span style="color:#d4a84b; font-family:serif; font-size:0.9em; letter-spacing:1px;">FLUX DES TRAVAUX</span>
+    </div>
+    <div id="flux-dialogue-integre" style="flex:1; padding:14px; overflow-y:auto; color:#eee; font-family:'Georgia', serif; font-size:0.95em; line-height:1.5;">
+        <i style="color:#444;">En attente de l'ouverture des travaux...</i>
+    </div>
+    <div style="padding:8px; border-top:1px solid #3a2a0a;">
+        <button onclick="effacerFlux()" style="width:100%; padding:5px; background:#1a1a1a; color:#555; border:1px solid #333; cursor:pointer; border-radius:3px; font-size:0.75em;">✕ Effacer le flux</button>
+    </div>
+</div>
+
+<!-- ── Bouton toggle Régie (gauche) ── -->
+<button id="btn-toggle-regie" onclick="toggleRegie()" title="Replier / déplier la régie">◀</button>
+
+<!-- ── Bord flux : poignée resize + bouton toggle (droite) ── -->
+<div id="flux-bord">
+  <div id="flux-bord-ligne"></div>
+  <button id="btn-toggle-flux"
+          onclick="toggleFlux()"
+          onmousedown="event.stopPropagation()"
+          title="Replier / déplier le flux">▶</button>
+</div>
+
+<script src="moteur.js"></script>
+
+<script>
+// ─── AUTHENTIFICATION
+// Note : mot de passe MESA à définir ─────────────────────────────────────────────────────────
+const HASHES = {
+    apprenti:  '9aa9ed6b0cb5cbca74cf85b30021606c5792fa3c1bc3aaf904b59d1d05cd4e77',
+    compagnon: 'ccb17f8c09e578d9d42ad97825dd4ab0c4b2a133ea00f863fa31ea2af5930cf7',
+    maitre:    '3b1974ecb816ea49206f3f227a55b39e1f56e7e8b1289d2c726c3ba6ac7a2b33',
+    me:        '4f0645761ceff50aec389142f018819bdd9292dd9a1bba4310bc6160d2974983',
+};
+
+// SHA-256 en JS pur — fonctionne sans serveur (file://)
+function sha256(str) {
+    function rightRotate(value, amount) {
+        return (value >>> amount) | (value << (32 - amount));
+    }
+    const mathPow = Math.pow;
+    const maxWord = mathPow(2, 32);
+    let result = '';
+    const words = [];
+    const asciiBitLength = str.length * 8;
+    let hash = [], k = [];
+    let primeCounter = 0;
+    const isComposite = {};
+    for (let candidate = 2; primeCounter < 64; candidate++) {
+        if (!isComposite[candidate]) {
+            for (let i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+            hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+            k[primeCounter++]  = (mathPow(candidate, 1/3) * maxWord) | 0;
+        }
+    }
+    str += '\x80';
+    while (str.length % 64 - 56) str += '\x00';
+    for (let i = 0; i < str.length; i++) {
+        const j = str.charCodeAt(i);
+        if (j >> 8) return '';
+        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words.length] = ((asciiBitLength / maxWord) | 0);
+    words[words.length] = (asciiBitLength | 0);
+    for (let j = 0; j < words.length;) {
+        const w = words.slice(j, j += 16);
+        const oldHash = [...hash];
+        for (let i = 0; i < 64; i++) {
+            const w15 = w[i - 15], w2 = w[i - 2];
+            const a = hash[0], e = hash[4];
+            const temp1 = hash[7]
+                + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                + ((e & hash[5]) ^ (~e & hash[6]))
+                + k[i]
+                + (w[i] = (i < 16) ? w[i] : (
+                    w[i - 16]
+                    + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                    + w[i - 7]
+                    + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                ) | 0);
+            const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+            hash = [(temp1 + temp2) | 0, a, hash[1], hash[2],
+                    (hash[3] + temp1) | 0, e, hash[5], hash[6]];
+        }
+        hash = hash.map((v, i) => (v + oldHash[i]) | 0);
+    }
+    hash.forEach(val => {
+        for (let i = 7; i >= 0; i--) {
+            result += ((val >>> (i * 4)) & 0xf).toString(16);
+        }
+    });
+    return result;
+}
+
+function tenterLogin() {
+    const grade = document.getElementById('login-grade').value;
+    const mdp   = document.getElementById('login-mdp').value;
+    const errEl = document.getElementById('login-error');
+    if (!grade) { errEl.textContent = 'Veuillez sélectionner votre grade.'; return; }
+    if (!mdp)   { errEl.textContent = 'Veuillez saisir le mot de passe.'; return; }
+    const h = sha256(mdp.toLowerCase());
+    if (h !== HASHES[grade]) { errEl.textContent = 'Mot de passe incorrect.'; return; }
+    errEl.textContent = '';
+    chargerGrade(grade);
+}
+
+// Permettre login avec Entrée
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('login-grade').addEventListener('keydown', e => {
+        if (e.key === 'Enter') tenterLogin();
+    });
+    document.getElementById('login-mdp').addEventListener('keydown', e => {
+        if (e.key === 'Enter') tenterLogin();
+    });
+    // Pré-sélection via URL ?grade=xxx
+    const params = new URLSearchParams(window.location.search);
+    const g = params.get('grade');
+    if (g) document.getElementById('login-grade').value = g;
+});
+
+// ─── RACCOURCIS CLAVIER ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    // Ignorer si l'écran de connexion est affiché ou si on tape dans un champ
+    const loginScreen = document.getElementById('login-screen');
+    if (loginScreen && loginScreen.style.display !== 'none') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.key === ' ') {
+        e.preventDefault();
+        if (typeof togglePause === 'function') togglePause();
+    } else if (e.key === 'Escape') {
+        e.preventDefault();
+        if (typeof Rituel !== 'undefined' && confirm('Ranger la loge ? La cérémonie en cours sera perdue.')) {
+            Rituel.resetTout();
+        }
+    } else if (e.key === 'd' || e.key === 'D') {
+        if (typeof toggleDebug === 'function') toggleDebug();
+    }
+});
+
+function _activerGrade(grade) {
+    document.getElementById('regie-panel').style.display = 'block';
+    document.getElementById('panneau-dialogue').style.display = 'flex';
+    document.getElementById('login-screen').style.display = 'none';
+    _initPanneauxToggle();
+    document.getElementById('menu-regie').innerHTML = genererMenu();
+    const titres = {
+        apprenti:  "Loge d'Apprenti",
+        compagnon: "Loge de Compagnon",
+        maitre:    "Loge de Maitre",
+        me:        "Loge de Maitre Ecossais de Saint-Andre",
+    };
+    document.getElementById('regie-titre').textContent = titres[grade] || 'Rituel R.E.R.';
+    window._ciergePosInitiales = {
+        'cierge-secretaire': {x: 920,  y: 1240},
+        'cierge-2surv':      {x: 1040, y: 1240},
+        'cierge-1surv':      {x: 1160, y: 1240},
+        'chandelier':        {x: 1270, y: 1240},
+    };
+    // Charger le catéchisme si la fonction existe
+    if (typeof chargerCatechisme === 'function') chargerCatechisme();
+    // Appliquer la visibilité initiale des pions
+    if (typeof Rituel !== 'undefined' && typeof Rituel.appliquerExist === 'function') {
+        Rituel.appliquerExist();
+    }
+    // Grade en loge toujours apprenti par défaut
+    window._gradeEnLoge = 'apprenti';
+    const svgEls = document.querySelectorAll('.bijou-svg');
+    const imgEls = document.querySelectorAll('.bijou-img');
+    svgEls.forEach(el => el.setAttribute('display', 'none'));
+    imgEls.forEach(el => el.setAttribute('display', 'inline'));
+}
+
+function chargerGrade(grade) {
+    window._gradeConnecte = grade;
+    // Si scenarios.js est déjà chargé, activer directement
+    if (typeof genererMenu === 'function' && typeof Rituel !== 'undefined') {
+        _activerGrade(grade);
+        return;
+    }
+    const script = document.createElement('script');
+    script.src = 'scenarios.js';
+    script.onload = function() { _activerGrade(grade); };
+    script.onerror = function() {
+        document.getElementById('login-error').textContent = 'Fichier de scénarios introuvable.';
+    };
+    document.body.appendChild(script);
+}
+
+// ─── FONCTIONS COMMUNES (SVG, UI) ─────────────────────────────────────────────
+function toggleCatechisme() {
+    const p = document.getElementById('panneau-catechisme');
+    const btn = document.getElementById('btn-catechisme');
+    if (!p) return;
+    const visible = p.style.display !== 'none';
+    p.style.display = visible ? 'none' : 'block';
+    if (btn) {
+        btn.textContent = visible ? '📖 Catéchisme : OFF' : '📖 Catéchisme : ON';
+        btn.style.cssText = visible
+            ? 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#1a1a1a; color:#666; border:1px solid #444;'
+            : 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a1800; color:#d4a84b; border:1px solid #8b6914;';
+    }
+    _updateToggleRegiePos();
+}
+
+// ─── CONFORMITÉ DU TEMPLE ─────────────────────────────────────────────────────
+const _CONFORMITE = {
+    apprenti: {
+        tapis:    'images/tapis_loge.png',
+        tapisCl:  'images/tapis_loge_cl.jpg',
+        tableau:  'adhuc-stat',
+        tableauSrc:   'images/adhuc_stat.png',
+        tableauSrcCl: 'images/adhuc_stat_cl.png',
+        etoile:  false,
+        miroir:  false,
+        maitre:  false,
+    },
+    compagnon: {
+        tapis:    'images/tapis_loge_B.png',
+        tapisCl:  'images/tapis_loge_B_cl.png',
+        tableau:  'dirigit-obliqua',
+        tableauSrc:   'images/dirigit_obliqua.png',
+        tableauSrcCl: 'images/dirigit_obliqua_cl.png',
+        etoile:  true,
+        miroir:  true,
+        maitre:  false,
+    },
+    maitre: {
+        tapis:    'images/tapis_loge_B.png',
+        tapisCl:  'images/tapis_loge_B_cl.png',
+        tableau:  'tableau-maitre',
+        tableauSrc:   null,
+        tableauSrcCl: null,
+        etoile:  false,
+        miroir:  false,
+        maitre:  true,
+    },
+    me: {
+        tapis:    'images/tapis_loge_B.png',
+        tapisCl:  'images/tapis_loge_B_cl.png',
+        tableau:  'tableau-me',
+        tableauSrc:   null,
+        tableauSrcCl: null,
+        etoile:  false,
+        miroir:  false,
+        maitre:  false,
+        me:      true,
+    },
+};
+
+const _TABLEAUX = ['adhuc-stat', 'dirigit-obliqua', 'tableau-maitre', 'tableau-me'];
+
+function miseEnConformite(grade) {
+    window._gradeEnLoge = grade; // tracker le grade actuellement en loge
+    const conf = _CONFORMITE[grade];
+    if (!conf) return;
+    const cl = (logeMode === 'classique');
+
+    // Tapis
+    const tapis = document.getElementById('tapis-loge');
+    if (tapis) tapis.setAttribute('href', (cl && conf.tapisCl ? conf.tapisCl : conf.tapis) + '?v=' + Date.now());
+
+    // Tableaux — masquer tous, afficher et mettre à jour le href de celui du grade
+    _TABLEAUX.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('visibility', 'hidden');
+    });
+    const tableau = document.getElementById(conf.tableau);
+    if (tableau) {
+        const src = cl && conf.tableauSrcCl ? conf.tableauSrcCl : conf.tableauSrc;
+        if (src) tableau.setAttribute('href', src + '?v=' + Date.now());
+        tableau.setAttribute('visibility', 'visible');
+    }
+
+    // Étoile flamboyante
+    const etoile = document.getElementById('etoile-flamboyante');
+    if (etoile) etoile.setAttribute('visibility', conf.etoile ? 'visible' : 'hidden');
+
+    // Miroir
+    const miroir = document.getElementById('miroir');
+    if (miroir) miroir.setAttribute('visibility', conf.miroir ? 'visible' : 'hidden');
+
+    // Éléments Maître
+    const elMaitre = document.getElementById('elements-maitre');
+    if (elMaitre) elMaitre.setAttribute('visibility', conf.maitre ? 'visible' : 'hidden');
+
+    // Vertus — visibles uniquement à partir du grade qui les utilise
+    const _gradeOrdre = { apprenti: 1, compagnon: 2, maitre: 3, me: 4 };
+    const _g = _gradeOrdre[grade] || 1;
+    ['pion-justice', 'pion-clemence'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('visibility', 'visible'); // utilisées dès l'apprenti
+    });
+    const elTemp = document.getElementById('pion-temperance');
+    if (elTemp) elTemp.setAttribute('visibility', _g >= 2 ? 'visible' : 'hidden');
+    const elPrud = document.getElementById('pion-prudence');
+    if (elPrud) elPrud.setAttribute('visibility', _g >= 3 ? 'visible' : 'hidden');
+
+    // Éléments Maître Écossais
+    const elMe = document.getElementById('elements-me');
+    if (elMe) elMe.setAttribute('visibility', conf.me ? 'visible' : 'hidden');
+}
+
+function allumerEtoileFlamboyante() {
+    const el = document.getElementById('etoile-flamboyante');
+    if (el) el.setAttribute('visibility', 'visible');
+}
+function eteindrEtoileFlamboyante() {
+    const el = document.getElementById('etoile-flamboyante');
+    if (el) el.setAttribute('visibility', 'hidden');
+}
+function allumerChandeliersMaitre() {
+    // Les chandeliers sont déjà visibles via elements-maitre
+    // Cette fonction peut animer l'allumage progressif si besoin
+    const elMaitre = document.getElementById('elements-maitre');
+    if (elMaitre) elMaitre.setAttribute('visibility', 'visible');
+}
+
+
+function effacerFlux() {
+    const f = document.getElementById('flux-dialogue-integre');
+    if (f) f.innerHTML = '<i style="color:#444;">Flux effacé.</i>';
+}
+
+function toggleBulles() {
+    Rituel.BULLES_ACTIVES = !Rituel.BULLES_ACTIVES;
+    const btn = document.getElementById('btn-bulles');
+    if (btn) {
+        btn.textContent = '💬 Bulles : ' + (Rituel.BULLES_ACTIVES ? 'ON' : 'OFF');
+        btn.style.cssText = Rituel.BULLES_ACTIVES
+            ? 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#0d2a0d; color:#a0d4a0; border:1px solid #4a8a4a;'
+            : 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a1a; color:#666; border:1px solid #444;';
+    }
+}
+
+let bijouxMode = 'img';
+function toggleBijoux() {
+    bijouxMode = bijouxMode === 'svg' ? 'img' : 'svg';
+    const svgEls = document.querySelectorAll('.bijou-svg');
+    const imgEls = document.querySelectorAll('.bijou-img');
+    const btn = document.getElementById('btn-bijoux-regie');
+    if (bijouxMode === 'img') {
+        svgEls.forEach(el => el.setAttribute('display', 'none'));
+        imgEls.forEach(el => el.setAttribute('display', 'inline'));
+        if (btn) {
+            btn.textContent = '✦ Bijoux : ON';
+            btn.style.cssText = 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a2000; color:gold; border:1px solid #8b6914;';
+        }
+    } else {
+        svgEls.forEach(el => el.setAttribute('display', 'inline'));
+        imgEls.forEach(el => el.setAttribute('display', 'none'));
+        if (btn) {
+            btn.textContent = '✦ Bijoux : OFF';
+            btn.style.cssText = 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#0d1e2a; color:#66b3ff; border:1px solid #3a6a99;';
+        }
+    }
+}
+
+// ─── MODE LOGE ────────────────────────────────────────────────────────────────
+let logeMode = 'epique'; // 'epique' | 'classique'
+function toggleLogeMode() {
+    logeMode = logeMode === 'epique' ? 'classique' : 'epique';
+    const btn = document.getElementById('btn-loge-mode');
+    if (btn) {
+        btn.textContent = logeMode === 'epique' ? '🏛 Loge : Épique' : '🏛 Loge : Classique';
+        btn.style.cssText = logeMode === 'epique'
+            ? 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a2000; color:gold; border:1px solid #8b6914;'
+            : 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#1a1200; color:#a08030; border:1px solid #6b5010;';
+    }
+    // Appliquer immédiatement au tapis et tableau courants
+    const grade = window._gradeEnLoge || window._gradeConnecte || 'apprenti';
+    const conf = _CONFORMITE[grade];
+    if (!conf) return;
+    const cl = (logeMode === 'classique');
+    const tapis = document.getElementById('tapis-loge');
+    if (tapis) tapis.setAttribute('href', (cl && conf.tapisCl ? conf.tapisCl : conf.tapis) + '?v=' + Date.now());
+    _TABLEAUX.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('visibility', 'hidden');
+    });
+    const tableau = document.getElementById(conf.tableau);
+    if (tableau) {
+        const src = cl && conf.tableauSrcCl ? conf.tableauSrcCl : conf.tableauSrc;
+        if (src) tableau.setAttribute('href', src + '?v=' + Date.now());
+        tableau.setAttribute('visibility', 'visible');
+    }
+}
+
+function fermerBible() {
+    const bOuverte = document.getElementById('bible-ouverte');
+    const bFermee  = document.getElementById('bible-fermee');
+    if (bOuverte) bOuverte.setAttribute('visibility', 'hidden');
+    if (bFermee)  bFermee.setAttribute('visibility',  'visible');
+}
+function ouvrirBible() {
+    const bOuverte = document.getElementById('bible-ouverte');
+    const bFermee  = document.getElementById('bible-fermee');
+    if (bOuverte) bOuverte.removeAttribute('visibility');
+    if (bFermee)  bFermee.setAttribute('visibility', 'hidden');
+}
+
+function eteindreCierge(id) {
+    const el = document.getElementById('flamme-cierge-' + id);
+    if (el) el.setAttribute('visibility', 'hidden');
+}
+function rallumerCiergesComplets() {
+    ['secretaire','1surv','2surv'].forEach(id => {
+        const el = document.getElementById('flamme-cierge-' + id);
+        if (el) el.removeAttribute('visibility');
+    });
+}
+
+function eteindreBougieChandelier(id) {
+    const el = document.getElementById('flamme-chandelier-' + id);
+    if (el) el.setAttribute('visibility', 'hidden');
+}
+function rallumerChandelierComplet() {
+    ['gauche','droite','centre'].forEach(id => {
+        const el = document.getElementById('flamme-chandelier-' + id);
+        if (el) el.removeAttribute('visibility');
+    });
+}
+
+function toggleDebug() {
+    Rituel.DEBUG_MODE = !Rituel.DEBUG_MODE;
+    const btn = document.getElementById('btn-debug');
+    if (btn) {
+        btn.textContent = '🐛 Debug : ' + (Rituel.DEBUG_MODE ? 'ON' : 'OFF');
+        btn.style.cssText = Rituel.DEBUG_MODE
+            ? 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#0d2a0d; color:#a0d4a0; border:1px solid #4a8a4a;'
+            : 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a1a; color:#666; border:1px solid #444;';
+    }
+    _toggleWaypoints(Rituel.DEBUG_MODE);
+    if (Rituel.DEBUG_MODE) {
+        // Rendre tous les pions visibles
+        Object.keys(Rituel.EXIST).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.setAttribute('visibility', 'visible');
+        });
+    } else {
+        // Restaurer les valeurs EXIST
+        Rituel.appliquerExist();
+    }
+    ['marqueur-eau','marqueur-feu','marqueur-terre'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('visibility', Rituel.DEBUG_MODE ? 'visible' : 'hidden');
+    });
+}
+
+function _toggleWaypoints(visible) {
+    const svg = document.getElementById('loge-svg');
+    const existant = document.getElementById('debug-waypoints');
+    if (existant) existant.remove();
+    if (!visible) return;
+    const WP = [
+        { n: '0', x: 630, y: 1130 }, { n: '1', x: 630, y:  830 },
+        { n: '2', x: 420, y:  720 }, { n: '3', x: 420, y:  565 },
+        { n: '4', x: 420, y:  380 }, { n: '5', x: 630, y:  280 },
+        { n: '6', x: 840, y:  380 }, { n: '7', x: 840, y:  565 },
+        { n: '8', x: 840, y:  720 },
+    ];
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('id', 'debug-waypoints');
+    const ordre = [1,2,3,4,5,6,7,8,1];
+    for (let i = 0; i < ordre.length - 1; i++) {
+        const a = WP[ordre[i]], b = WP[ordre[i+1]];
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+        line.setAttribute('stroke', '#cccc44'); line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray', '6 4'); line.setAttribute('opacity', '0.55');
+        g.appendChild(line);
+    }
+    [[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,1]].forEach(([ai, bi]) => {
+        const a = WP[ai], b = WP[bi];
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        const angle = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+        const fg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        fg.setAttribute('transform', `translate(${mx},${my}) rotate(${angle})`);
+        fg.setAttribute('opacity', '0.85');
+        const tige = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tige.setAttribute('x1', '-10'); tige.setAttribute('y1', '0');
+        tige.setAttribute('x2', '2');   tige.setAttribute('y2', '0');
+        tige.setAttribute('stroke', '#ffdd44'); tige.setAttribute('stroke-width', '2.5');
+        fg.appendChild(tige);
+        const pt = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        pt.setAttribute('points', '10,0 2,-5 2,5'); pt.setAttribute('fill', '#ffdd44');
+        fg.appendChild(pt); g.appendChild(fg);
+    });
+    WP.forEach(wp => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', wp.x); circle.setAttribute('cy', wp.y);
+        circle.setAttribute('r', '14');
+        circle.setAttribute('fill', wp.n === '0' ? '#442200' : '#1a1a00');
+        circle.setAttribute('stroke', '#cccc44'); circle.setAttribute('stroke-width', '1.5');
+        circle.setAttribute('opacity', '0.85'); g.appendChild(circle);
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', wp.x); label.setAttribute('y', wp.y);
+        label.setAttribute('fill', '#ffdd44'); label.setAttribute('font-size', '12');
+        label.setAttribute('font-weight', 'bold'); label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('dominant-baseline', 'middle');
+        label.textContent = 'WP' + wp.n; g.appendChild(label);
+    });
+
+    // ── Points de passage des voyages (PW) ──────────────────────────────────
+    const PW = [
+        { n:  '1', x:  637, y:  903 },
+        { n:  '2', x:  498, y: 1026 },
+        { n:  '3', x:  303, y: 1019 },
+        { n:  '4', x:  319, y:  808 },
+        { n:  '5', x:  451, y:  159 },
+        { n:  '6', x:  632, y:   47 },
+        { n:  '7', x:  806, y:  149 },
+        { n:  '8', x:  952, y:  803 },
+        { n:  '9', x:  969, y: 1032 },
+        { n: '10', x:  792, y: 1033 },
+    ];
+
+    // Tracé du circuit PW en sens du soleil : 1→2→3→4→5→6→7→8→9→10→1
+    const ordrePW = [1,2,3,4,5,6,7,8,9,10,1];
+    for (let i = 0; i < ordrePW.length - 1; i++) {
+        const a = PW[ordrePW[i]-1], b = PW[ordrePW[i+1]-1];
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+        line.setAttribute('stroke', '#cc44cc');
+        line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray', '6 4');
+        line.setAttribute('opacity', '0.55');
+        g.appendChild(line);
+    }
+
+    // Flèches PW
+    [[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,1]].forEach(([ai, bi]) => {
+        const a = PW[ai-1], b = PW[bi-1];
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        const angle = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+        const fg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        fg.setAttribute('transform', `translate(${mx},${my}) rotate(${angle})`);
+        fg.setAttribute('opacity', '0.85');
+        const tige = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tige.setAttribute('x1', '-10'); tige.setAttribute('y1', '0');
+        tige.setAttribute('x2', '2');   tige.setAttribute('y2', '0');
+        tige.setAttribute('stroke', '#ff66ff'); tige.setAttribute('stroke-width', '2.5');
+        fg.appendChild(tige);
+        const pt = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        pt.setAttribute('points', '10,0 2,-5 2,5'); pt.setAttribute('fill', '#ff66ff');
+        fg.appendChild(pt); g.appendChild(fg);
+    });
+
+    // Pastilles PW (violet/rose pour les distinguer des WP jaunes)
+    PW.forEach(pw => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pw.x); circle.setAttribute('cy', pw.y);
+        circle.setAttribute('r', '12');
+        circle.setAttribute('fill', '#2a0a2a');
+        circle.setAttribute('stroke', '#cc44cc');
+        circle.setAttribute('stroke-width', '1.5');
+        circle.setAttribute('opacity', '0.85');
+        g.appendChild(circle);
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', pw.x); label.setAttribute('y', pw.y);
+        label.setAttribute('fill', '#ff88ff');
+        label.setAttribute('font-size', '10');
+        label.setAttribute('font-weight', 'bold');
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('dominant-baseline', 'middle');
+        label.textContent = 'PW' + pw.n;
+        g.appendChild(label);
+    });
+
+    svg.appendChild(g);
+}
+
+function afficherPositions() {
+    const pos = positionsTous();
+    const flux = document.getElementById('flux-dialogue-integre');
+    if (!flux) return;
+    let html = '<div style="margin-bottom:10px; border-left:3px solid #8888cc; padding-left:10px;">';
+    html += '<b style="color:#8888cc; font-size:0.85em;">📍 POSITIONS</b><br>';
+    html += '<span style="color:#ccc; font-size:0.78em; font-family:monospace;">';
+    Object.entries(pos).forEach(([id, p]) => {
+        if (p) html += `${id.replace('pion-','').padEnd(16)} x:${String(p.x).padStart(4)}  y:${String(p.y).padStart(4)}<br>`;
+    });
+    html += '</span></div>';
+    flux.innerHTML += html;
+    flux.scrollTop = flux.scrollHeight;
+}
+
+// ─── TOGGLE ET RESIZE DES PANNEAUX LATÉRAUX ─────────────────────────────────
+
+let _regieReplie = false;
+let _fluxReplie  = false;
+let _fluxLargeur = parseInt(localStorage.getItem('flux-largeur') || '540');
+
+function _initPanneauxToggle() {
+    // Afficher les boutons
+    document.getElementById('btn-toggle-regie').style.display = 'flex';
+    document.getElementById('flux-bord').style.display = 'block';
+    // Positionner le bouton régie (catéchisme forcément fermé au login)
+    _updateToggleRegiePos();
+    // Appliquer la largeur mémorisée au panneau flux
+    if (_fluxLargeur !== 540) {
+        document.getElementById('panneau-dialogue').style.width = _fluxLargeur + 'px';
+    }
+    document.getElementById('flux-bord').style.right = _fluxLargeur + 'px';
+}
+
+// Place le bouton toggle-régie sur le bord droit du panneau le plus à droite
+function _updateToggleRegiePos() {
+    const btn = document.getElementById('btn-toggle-regie');
+    if (!btn || btn.style.display === 'none') return;
+    if (_regieReplie) { btn.style.left = '0px'; return; }
+    const cat = document.getElementById('panneau-catechisme');
+    const catVisible = cat && cat.style.display !== 'none';
+    btn.style.left = (catVisible ? 695 : 270) + 'px';
+}
+
+function toggleRegie() {
+    _regieReplie = !_regieReplie;
+    const panel = document.getElementById('regie-panel');
+    const cat   = document.getElementById('panneau-catechisme');
+    const catVisible = cat && cat.style.display !== 'none';
+
+    if (_regieReplie) {
+        panel.style.transform = 'translateX(-270px)';
+        if (catVisible) cat.style.transform = 'translateX(-695px)';
+        document.getElementById('btn-toggle-regie').textContent = '▶';
+    } else {
+        panel.style.transform = '';
+        if (catVisible) cat.style.transform = '';
+        document.getElementById('btn-toggle-regie').textContent = '◀';
+    }
+    _updateToggleRegiePos();
+}
+
+function toggleFlux() {
+    _fluxReplie = !_fluxReplie;
+    const panel = document.getElementById('panneau-dialogue');
+    const bord  = document.getElementById('flux-bord');
+    const btn   = document.getElementById('btn-toggle-flux');
+    panel.style.transform = _fluxReplie ? 'translateX(' + _fluxLargeur + 'px)' : '';
+    bord.style.right      = (_fluxReplie ? 0 : _fluxLargeur) + 'px';
+    btn.textContent       = _fluxReplie ? '◀' : '▶';
+}
+
+// ── Resize du panneau flux ───────────────────────────────────────────────────
+(function() {
+    let actif = false, xDepart, largeurDepart;
+
+    document.addEventListener('mousedown', function(e) {
+        const bord = document.getElementById('flux-bord');
+        if (!bord || bord.style.display === 'none') return;
+        if (!bord.contains(e.target)) return;
+        if (e.target.closest('#btn-toggle-flux')) return; // clic bouton → toggle, pas resize
+        if (_fluxReplie) return;
+        actif = true;
+        xDepart = e.clientX;
+        largeurDepart = _fluxLargeur;
+        // Désactiver les transitions le temps du resize
+        document.getElementById('panneau-dialogue').style.transition = 'none';
+        bord.style.transition = 'none';
+        bord.classList.add('en-resize');
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!actif) return;
+        const dx = xDepart - e.clientX;   // glisser à gauche = panneau plus large
+        _fluxLargeur = Math.max(200, Math.min(900, largeurDepart + dx));
+        document.getElementById('panneau-dialogue').style.width = _fluxLargeur + 'px';
+        document.getElementById('flux-bord').style.right = _fluxLargeur + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (!actif) return;
+        actif = false;
+        // Restaurer les transitions
+        document.getElementById('panneau-dialogue').style.transition = '';
+        const bord = document.getElementById('flux-bord');
+        bord.style.transition = '';
+        bord.classList.remove('en-resize');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        localStorage.setItem('flux-largeur', String(_fluxLargeur));
+    });
+})();
+</script>
+
+<!-- OVERLAY QUIZ -->
+<div id="quiz-overlay">
+  <button class="quiz-close" onclick="fermerQuiz()" title="Fermer le quiz">✕</button>
+  <iframe id="quiz-iframe" src="" allow="autoplay"></iframe>
+</div>
+
+<script>
+function ouvrirQuiz() {
+    const grade = window._gradeConnecte || 'apprenti';
+    const overlay = document.getElementById('quiz-overlay');
+    const iframe = document.getElementById('quiz-iframe');
+    // Mettre la loge en pause si elle ne l'est pas déjà
+    if (typeof Rituel !== 'undefined' && !Rituel._paused) togglePause();
+    iframe.src = 'XQuiz RER/quiz_rer.html?grade=' + encodeURIComponent(grade);
+    overlay.classList.add('active');
+    // Transmettre le grade via la variable globale dans l'iframe une fois chargé
+    iframe.onload = function() {
+        try { iframe.contentWindow._gradeConnecte = grade; } catch(e) {}
+    };
+}
+
+function fermerQuiz() {
+    const overlay = document.getElementById('quiz-overlay');
+    const iframe = document.getElementById('quiz-iframe');
+    overlay.classList.remove('active');
+    iframe.src = '';
+}
+
+// Fermer le quiz avec Échap
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('quiz-overlay').classList.contains('active')) {
+        fermerQuiz();
+        e.stopImmediatePropagation();
+    }
+}, true);
+</script>
+
+</body>
+</html>
