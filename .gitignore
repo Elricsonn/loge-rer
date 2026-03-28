@@ -1,0 +1,14 @@
+# Ressources privées (rituels PDF, catéchismes)
+XRessources Claude/
+
+# Documentation locale (non publiée)
+*.docx
+guide_utilisateur.html
+mode_emploi_technique.html
+
+# Ancien dossier de déploiement
+_deploy/
+
+# Système
+.DS_Store
+.claude/
