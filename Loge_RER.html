@@ -164,6 +164,7 @@
   </div>
   <div class="separateur"></div>
   <div class="etoile-login">✦</div>
+  <div style="margin-top:28px; color:#d4a84b; font-family:'Cinzel', serif; font-size:1.1em; letter-spacing:3px; text-shadow:0 0 12px rgba(212,168,75,0.3);">© Elricsonn</div>
 </div>
 
 <!-- PLATEAU SVG -->
@@ -1458,6 +1459,7 @@ function _activerGrade(grade) {
     document.getElementById('regie-panel').style.display = 'block';
     document.getElementById('panneau-dialogue').style.display = 'flex';
     document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('copyright-loge').style.display = 'block';
     _initPanneauxToggle();
     document.getElementById('menu-regie').innerHTML = genererMenu();
     const titres = {
@@ -2041,6 +2043,8 @@ document.addEventListener('keydown', function(e) {
     }
 }, true);
 </script>
+
+<div id="copyright-loge" style="display:none; position:fixed; bottom:6px; left:50%; transform:translateX(-50%); color:#d4a84b; font-family:'Cinzel',serif; font-size:0.65em; letter-spacing:1px; opacity:0.7; pointer-events:none; z-index:99997;">© Elricsonn</div>
 
 </body>
 </html>
