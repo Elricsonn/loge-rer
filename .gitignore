@@ -3,7 +3,6 @@ XRessources Claude/
 
 # Documentation locale (non publiée)
 *.docx
-guide_utilisateur.html
 mode_emploi_technique.html
 
 # Ancien dossier de déploiement

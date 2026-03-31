@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide utilisateur — Simulation de Loge RER</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 17px; }
+body {
+    background: #0e0a06;
+    color: #d9cdb8;
+    font-family: 'Crimson Text', Georgia, serif;
+    line-height: 1.72;
+    min-height: 100vh;
+}
+::selection { background: #d4a84b33; color: #fff; }
+
+/* ===== LAYOUT ===== */
+.page-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+.content-area {
+    flex: 1;
+    min-width: 0;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 40px 80px 40px;
+}
+@media (min-width: 1100px) {
+    .content-area { margin-left: 260px; }
+}
+
+/* ===== SIDEBAR TOC ===== */
+.toc-sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 240px;
+    height: 100vh;
+    background: #0b0804;
+    border-right: 1px solid #2a2015;
+    overflow-y: auto;
+    padding: 28px 16px 40px 16px;
+    z-index: 100;
+    transition: transform .35s cubic-bezier(.4,0,.2,1);
+    scrollbar-width: thin;
+    scrollbar-color: #3a2a10 transparent;
+}
+.toc-sidebar::-webkit-scrollbar { width: 5px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: #3a2a10; border-radius: 3px; }
+.toc-sidebar::-webkit-scrollbar-track { background: transparent; }
+.toc-sidebar .toc-title {
+    font-family: 'Cinzel', serif;
+    font-size: .82rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: #d4a84b;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2015;
+}
+.toc-sidebar a {
+    display: block;
+    color: #9a8a6e;
+    text-decoration: none;
+    font-family: 'Crimson Text', serif;
+    font-size: .86rem;
+    line-height: 1.45;
+    padding: 4px 8px 4px 12px;
+    border-left: 2px solid transparent;
+    border-radius: 0 4px 4px 0;
+    transition: all .2s;
+    margin-bottom: 1px;
+}
+.toc-sidebar a:hover {
+    color: #d4a84b;
+    background: #1a1208;
+    border-left-color: #d4a84b44;
+}
+.toc-sidebar a.active {
+    color: #d4a84b;
+    background: #1a1208;
+    border-left-color: #d4a84b;
+    font-weight: 600;
+}
+
+/* ===== HAMBURGER ===== */
+.toc-toggle {
+    display: none;
+    position: fixed;
+    top: 14px; left: 14px;
+    z-index: 200;
+    width: 42px; height: 42px;
+    background: #161008;
+    border: 1px solid #2a2015;
+    border-radius: 6px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+}
+.toc-toggle span {
+    display: block;
+    width: 22px; height: 2px;
+    background: #d4a84b;
+    border-radius: 1px;
+    transition: all .3s;
+}
+.toc-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.toc-toggle.open span:nth-child(2) { opacity: 0; }
+.toc-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.toc-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 90;
+}
+
+@media (max-width: 1099px) {
+    .toc-toggle { display: flex; }
+    .toc-sidebar { transform: translateX(-100%); }
+    .toc-sidebar.open { transform: translateX(0); }
+    .toc-overlay.open { display: block; }
+    .content-area { padding: 48px 24px 80px 24px; margin-left: 0; }
+}
+@media (max-width: 600px) {
+    html { font-size: 15px; }
+    .content-area { padding: 40px 16px 60px 16px; }
+}
+
+/* ===== TITLE PAGE ===== */
+.title-page {
+    text-align: center;
+    padding: 60px 20px 50px;
+    margin-bottom: 40px;
+}
+.title-stars {
+    font-size: 1.4rem;
+    color: #d4a84b;
+    letter-spacing: .6em;
+    margin: 10px 0;
+}
+.title-page h1 {
+    font-family: 'Cinzel Decorative', 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    color: #d4a84b;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin: 20px 0 6px;
+    line-height: 1.25;
+}
+.title-page .title-rite {
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    color: #b89a52;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.title-page .title-loge {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    color: #9a8a6e;
+    margin-bottom: 24px;
+}
+.title-page .title-mode {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #d4a84b;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+}
+
+/* ===== HEADINGS ===== */
+h2 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.55rem;
+    color: #d4a84b;
+    margin: 52px 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2015;
+    letter-spacing: .06em;
+}
+h3 {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #c9a24a;
+    margin: 32px 0 12px;
+    letter-spacing: .04em;
+}
+h4 {
+    font-family: 'Cinzel', serif;
+    font-weight: 400;
+    font-size: 1rem;
+    color: #b89a52;
+    margin: 22px 0 8px;
+}
+
+/* ===== PARAGRAPHS & LISTS ===== */
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px 24px; }
+li { margin-bottom: 5px; }
+ul li::marker { color: #d4a84b88; }
+ol li::marker { color: #d4a84b; font-weight: 600; }
+strong, b { color: #e0c878; font-weight: 600; }
+em, i { font-style: italic; color: #c4b38e; }
+
+/* ===== TABLES ===== */
+.table-wrap {
+    overflow-x: auto;
+    margin: 16px 0 22px;
+    border-radius: 6px;
+    border: 1px solid #2a2015;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .92rem;
+}
+thead th {
+    font-family: 'Cinzel', serif;
+    font-size: .78rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #d4a84b;
+    background: #161008;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 2px solid #2a2015;
+    white-space: nowrap;
+}
+tbody td {
+    padding: 8px 14px;
+    border-bottom: 1px solid #1a1208;
+    vertical-align: top;
+}
+tbody tr:nth-child(even) td { background: #110d06; }
+tbody tr:hover td { background: #1a140a; }
+td code, th code {
+    font-size: .85em;
+    background: #1a1208;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #e0c878;
+}
+
+/* ===== CODE ===== */
+code {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: .9em;
+}
+p code, li code {
+    background: #1a1208;
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #e0c878;
+}
+
+/* ===== GOLD SEPARATOR ===== */
+.gold-sep {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d4a84b55, #d4a84b88, #d4a84b55, transparent);
+    margin: 30px 0;
+    border: none;
+}
+
+/* ===== BACK TO TOP ===== */
+.back-to-top {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 44px; height: 44px;
+    background: #161008;
+    border: 1px solid #2a2015;
+    border-radius: 50%;
+    color: #d4a84b;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all .3s;
+    z-index: 80;
+}
+.back-to-top.visible { opacity: 1; visibility: visible; }
+.back-to-top:hover { background: #1e1608; border-color: #d4a84b44; transform: translateY(-2px); }
+
+/* ===== FOOTER ===== */
+.footer {
+    text-align: center;
+    padding: 50px 20px 40px;
+    margin-top: 50px;
+    border-top: 1px solid #2a2015;
+    color: #6a5a3e;
+}
+.footer .footer-stars { color: #d4a84b88; letter-spacing: .5em; margin: 8px 0; }
+.footer .footer-loge { font-family: 'IM Fell English', serif; font-style: italic; }
+.footer .footer-copy { font-size: .85rem; margin-top: 6px; }
+
+/* ===== PRINT ===== */
+@media print {
+    body { background: #fff; color: #111; font-size: 11pt; }
+    .toc-sidebar, .toc-toggle, .toc-overlay, .back-to-top { display: none !important; }
+    .content-area { margin: 0; padding: 20px; max-width: 100%; }
+    h2 { color: #333; border-bottom-color: #999; }
+    h3, h4 { color: #444; }
+    .title-page h1, .title-page .title-mode, .title-stars { color: #222; }
+    .title-page .title-rite, .title-page .title-loge { color: #555; }
+    table { font-size: 9pt; }
+    thead th { background: #eee; color: #222; border-bottom-color: #999; }
+    tbody tr:nth-child(even) td { background: #f5f5f5; }
+    tbody td { border-bottom-color: #ddd; }
+    code, p code, li code, td code { color: #333; background: #eee; }
+    .gold-sep { background: #ccc; }
+    strong, b { color: #111; }
+    em, i { color: #333; }
+    a { color: #111; text-decoration: none; }
+    .footer { border-top-color: #ccc; color: #666; }
+    .footer .footer-stars { color: #999; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TOC TOGGLE (mobile) ===== -->
+<button class="toc-toggle" id="tocToggle" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="toc-overlay" id="tocOverlay"></div>
+
+<!-- ===== SIDEBAR TOC ===== -->
+<nav class="toc-sidebar" id="tocSidebar">
+    <div class="toc-title">Table des mati&#232;res</div>
+    <a href="#s1">1. Pr&#233;sentation</a>
+    <a href="#s2">2. D&#233;marrage</a>
+    <a href="#s3">3. L'interface</a>
+    <a href="#s4">4. Les pions</a>
+    <a href="#s5">5. Le panneau de r&#233;gie</a>
+    <a href="#s6">6. Le flux des travaux</a>
+    <a href="#s7">7. Le cat&#233;chisme</a>
+    <a href="#s8">8. Tenue ordinaire</a>
+    <a href="#s9">9. Tenue de r&#233;ception</a>
+    <a href="#s10">10. Sons et musique</a>
+    <a href="#s11">11. Raccourcis clavier</a>
+    <a href="#s12">12. Trucs et astuces</a>
+    <a href="#s13">13. Le Quiz (XQuiz RER)</a>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="page-wrapper">
+<main class="content-area">
+
+<!-- TITLE PAGE -->
+<div class="title-page" id="top">
+    <div class="title-stars">&#10022;&#8195;&#10022;&#8195;&#10022;</div>
+    <h1>Simulation de Loge</h1>
+    <div class="title-rite">Rite &#201;cossais Rectifi&#233;</div>
+    <div class="title-loge">R&#8756; L&#8756; Jean Mono&#239;kos</div>
+    <div style="height:20px"></div>
+    <div class="title-mode">Guide utilisateur</div>
+    <div class="title-stars">&#10022;&#8195;&#10022;&#8195;&#10022;</div>
+</div>
+
+<hr class="gold-sep">
+
+<!-- ================================================================ -->
+<!-- 1. Pr&#233;sentation -->
+<!-- ================================================================ -->
+<h2 id="s1">1. Pr&#233;sentation</h2>
+
+<p>La <strong>Simulation de Loge RER</strong> est un outil p&#233;dagogique interactif permettant de visualiser le d&#233;roulement complet d'une Tenue au Rite &#201;cossais Rectifi&#233;, sur les quatre grades symboliques (Apprenti, Compagnon, Ma&#238;tre, Ma&#238;tre &#201;cossais de Saint-Andr&#233;).</p>
+
+<p>Elle repr&#233;sente le plan de loge vu de dessus, avec les pions des Officiers et des Fr&#232;res, anime leurs d&#233;placements selon le rituel, restitue les dialogues et actions c&#233;r&#233;moniales en temps r&#233;el, et accompagne le tout de sons rituels et de musiques de fond.</p>
+
+<p>Elle int&#232;gre &#233;galement un jeu de quiz interactif (<strong>XQuiz RER</strong>) permettant de tester ses connaissances du cat&#233;chisme, adapt&#233; au grade de l'utilisateur.</p>
+
+<h3>&#192; quoi sert-elle ?</h3>
+<ul>
+    <li>Former les Officiers &#224; leur r&#244;le et &#224; la chor&#233;graphie du rituel</li>
+    <li>Permettre aux Fr&#232;res de r&#233;p&#233;ter les c&#233;r&#233;monies sans mobiliser toute la Loge</li>
+    <li>Servir de r&#233;f&#233;rence visuelle pour la mise en place du temple</li>
+    <li>Pr&#233;parer les r&#233;ceptions de candidats &#233;tape par &#233;tape</li>
+    <li>Tester et approfondir ses connaissances du cat&#233;chisme via le quiz interactif</li>
+</ul>
+
+<h3>Que faut-il pour l'utiliser ?</h3>
+<ul>
+    <li>Un navigateur web moderne (Chrome, Firefox, Safari ou Edge, version r&#233;cente)</li>
+    <li>Aucune installation n&#233;cessaire &#8212; tout fonctionne en local, sans connexion internet</li>
+    <li>R&#233;solution recommand&#233;e : 1 400 pixels de large minimum</li>
+    <li>Les sons et musiques n&#233;cessitent que le navigateur autorise la lecture audio</li>
+</ul>
+
+<!-- ================================================================ -->
+<!-- 2. D&#233;marrage -->
+<!-- ================================================================ -->
+<h2 id="s2">2. D&#233;marrage &#8212; &#201;cran de connexion</h2>
+
+<p>&#192; l'ouverture du fichier <code>Loge_RER.html</code> dans votre navigateur, un &#233;cran de connexion s'affiche sur fond sombre, aux couleurs du Rite.</p>
+
+<h3>&#201;tapes de connexion</h3>
+<ol>
+    <li>S&#233;lectionner votre grade dans le menu d&#233;roulant (Apprenti, Compagnon, Ma&#238;tre ou Ma&#238;tre &#201;cossais)</li>
+    <li>Saisir le mot de passe correspondant &#224; votre grade</li>
+    <li>Cliquer sur &#171; Entrer en Loge &#187; ou appuyer sur <strong>Entr&#233;e</strong></li>
+</ol>
+
+<p>Le mot de passe est insensible &#224; la casse. La validation fonctionne aussi bien avec le bouton qu'avec la touche Entr&#233;e.</p>
+<p>Un lien <strong>Guide de l'utilisateur</strong> est disponible en bas de l'&#233;cran de connexion. Il ouvre le pr&#233;sent guide dans un nouvel onglet, sans n&#233;cessiter de mot de passe.</p>
+
+<h3>Acc&#232;s par grade</h3>
+<p>Le grade s&#233;lectionn&#233; d&#233;termine les c&#233;r&#233;monies accessibles et le niveau des questions dans le quiz.</p>
+
+<h3>Acc&#232;s direct par URL</h3>
+<p>Pour pr&#233;-s&#233;lectionner un grade, ajoutez le param&#232;tre <code>?grade=apprenti</code> (ou <code>compagnon</code>, <code>maitre</code>, <code>me</code>) &#224; l'URL. Le mot de passe reste obligatoire.</p>
+
+<h3>Mots de passe</h3>
+<p>Les mots de passe sont &#224; communiquer uniquement aux Fr&#232;res du grade concern&#233;.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Grade</th><th>Mot de passe</th></tr></thead>
+<tbody>
+<tr><td>Apprenti</td><td><em>(&#224; communiquer par le V&#8756;M&#8756;)</em></td></tr>
+<tr><td>Compagnon</td><td><em>(&#224; communiquer par le V&#8756;M&#8756;)</em></td></tr>
+<tr><td>Ma&#238;tre</td><td><em>(&#224; communiquer par le V&#8756;M&#8756;)</em></td></tr>
+<tr><td>Ma&#238;tre &#201;cossais</td><td><em>(&#224; communiquer par le V&#8756;M&#8756;)</em></td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================ -->
+<!-- 3. L'interface -->
+<!-- ================================================================ -->
+<h2 id="s3">3. L'interface</h2>
+
+<p>Une fois connect&#233;, l'interface se compose de trois zones principales et d'un panneau optionnel :</p>
+
+<h3>Le panneau de r&#233;gie (&#224; gauche)</h3>
+<p>Bande verticale contenant tous les boutons de contr&#244;le du rituel, organis&#233;s en sections accord&#233;on. C'est le &#171; poste de pilotage &#187; de la simulation.</p>
+
+<h3>Le plan de loge (au centre)</h3>
+<p>Repr&#233;sentation SVG du temple vu de dessus, orient&#233; avec l'Orient en haut et l'Occident en bas.</p>
+
+<h3>Le flux des travaux (&#224; droite)</h3>
+<p>Panneau d&#233;roulant qui transcrit en temps r&#233;el l'int&#233;gralit&#233; du rituel : dialogues, actions c&#233;r&#233;monielles, informations syst&#232;me.</p>
+
+<h3>Le panneau cat&#233;chisme (optionnel)</h3>
+<p>Activable depuis la section Syst&#232;me, ce panneau interm&#233;diaire affiche le vocabulaire du grade courant.</p>
+
+<h3>Panneaux escamotables</h3>
+<p>Les panneaux de r&#233;gie et du flux peuvent &#234;tre repli&#233;s gr&#226;ce &#224; leurs boutons de bascule. La largeur du panneau flux est ajustable par glisser-d&#233;poser.</p>
+
+<!-- ================================================================ -->
+<!-- 4. Les pions -->
+<!-- ================================================================ -->
+<h2 id="s4">4. Les pions</h2>
+
+<p>Les pions repr&#233;sentent les Officiers et les Fr&#232;res sur le plan de loge. Chaque pion est un disque color&#233; portant une abr&#233;viation.</p>
+
+<h3>Code couleur</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Pion</th><th>Couleur</th><th>Signification</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong></td><td>Blanc, liser&#233; gris</td><td>Apprenti</td></tr>
+<tr><td><strong>C</strong></td><td>Blanc, liser&#233; bleu clair</td><td>Compagnon</td></tr>
+<tr><td><strong>M</strong></td><td>Bleu</td><td>Ma&#238;tre</td></tr>
+<tr><td><strong>MX</strong></td><td>Vert fonc&#233;, liser&#233; rouge</td><td>Ma&#238;tre &#201;cossais</td></tr>
+<tr><td><strong>VM</strong></td><td>Avec image portrait</td><td>V&#233;n&#233;rable Ma&#238;tre</td></tr>
+<tr><td><strong>1&#176;S, 2&#176;S</strong></td><td>Avec image portrait</td><td>Surveillants</td></tr>
+<tr><td><strong>MC, Sec, Or, Tr, &#201;c, &#201;l</strong></td><td>Avec image portrait</td><td>Autres Officiers</td></tr>
+<tr><td><strong>Candidat</strong></td><td>Pion d&#233;di&#233;</td><td>Visible pendant les r&#233;ceptions uniquement</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Bijoux des Officiers</h3>
+<p>Chaque Officier peut afficher un symbole g&#233;om&#233;trique (bijou) ou un portrait. Le bouton <strong>Bijoux : ON/OFF</strong> dans la section Syst&#232;me bascule entre les deux modes.</p>
+
+<h3>D&#233;placement manuel</h3>
+<p>Tous les pions sont d&#233;pla&#231;ables manuellement par glisser-d&#233;poser, y compris pendant une animation en cours. Le toucher tactile est &#233;galement support&#233;.</p>
+
+<!-- ================================================================ -->
+<!-- 5. Le panneau de r&#233;gie -->
+<!-- ================================================================ -->
+<h2 id="s5">5. Le panneau de r&#233;gie</h2>
+
+<p>Le panneau de r&#233;gie est organis&#233; en sections accord&#233;on. Les sections visibles d&#233;pendent du grade connect&#233; :</p>
+
+<h3>Sections par grade</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Grade connect&#233;</th><th>Sections visibles</th></tr></thead>
+<tbody>
+<tr><td>Apprenti</td><td>Entr&#233;e &#183; Loge Apprenti &#183; R&#233;ception Apprenti &#183; R&#232;gle &#183; Syst&#232;me</td></tr>
+<tr><td>Compagnon</td><td>+ Loge Compagnon &#183; R&#233;ception Compagnon</td></tr>
+<tr><td>Ma&#238;tre</td><td>+ Loge Ma&#238;tre &#183; R&#233;ception Ma&#238;tre</td></tr>
+<tr><td>Ma&#238;tre &#201;cossais</td><td>Loge ME &#183; R&#233;ception ME &#183; R&#232;gle &#183; Syst&#232;me</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Section Entr&#233;e</h3>
+<p>Contient le bouton <strong>&#171; Entr&#233;e des Fr&#232;res &#187;</strong> qui d&#233;clenche l'arriv&#233;e des pions dans le temple.</p>
+
+<h3>Sections Loge</h3>
+<p>Chaque section Loge (selon le grade) propose les boutons suivants : Loge pr&#234;te, Ouverture, Cat&#233;chisme (complet ou par sections), Instruction morale, Cl&#244;ture, Sortie/retour, Mise en conformit&#233;.</p>
+
+<h3>Sections R&#233;ception</h3>
+<p>Les r&#233;ceptions se d&#233;roulent en 6 ou 7 &#233;tapes (6 pour l'Apprenti, 7 pour les autres grades) :</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>&#201;tape</th><th>Contenu</th></tr></thead>
+<tbody>
+<tr><td><strong>1. Proclamation</strong></td><td>Annonce du candidat</td></tr>
+<tr><td><strong>2. Introduction</strong></td><td>Entr&#233;e du candidat avec cort&#232;ge</td></tr>
+<tr><td><strong>3. Voyages</strong></td><td>Trois voyages (Feu, Eau, Terre)</td></tr>
+<tr><td><strong>4. Serment</strong></td><td>Prestation de serment</td></tr>
+<tr><td><strong>5. R&#233;ception</strong></td><td>R&#233;ception proprement dite</td></tr>
+<tr><td><strong>6. Lumi&#232;re</strong></td><td>Le candidat re&#231;oit la Lumi&#232;re</td></tr>
+<tr><td><strong>7. Investiture</strong></td><td>Remise des insignes</td></tr>
+</tbody>
+</table>
+</div>
+<p><em>Note :</em> pour le grade d'Apprenti, les &#233;tapes 4 (Serment) et 5 (R&#233;ception) sont fusionn&#233;es en une seule s&#233;quence. Le panneau de r&#233;gie affiche donc 6 boutons pour la r&#233;ception Apprenti, et 7 pour les autres grades.</p>
+
+<h3>Section R&#232;gle</h3>
+<p>Lecture de la R&#232;gle ma&#231;onnique, d&#233;coup&#233;e en trois groupes : articles I&#8211;III, IV&#8211;VI et VII&#8211;IX.</p>
+
+<h3>Section Syst&#232;me</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Contr&#244;le</th><th>Fonction</th></tr></thead>
+<tbody>
+<tr><td><strong>Zone &#171; &#233;tape en cours &#187;</strong></td><td>Affiche le nom de la c&#233;r&#233;monie en cours</td></tr>
+<tr><td><strong>Pause / Reprendre</strong></td><td>Suspend ou reprend la c&#233;r&#233;monie (aussi : touche Espace)</td></tr>
+<tr><td><strong>Ranger la loge</strong></td><td>Remet tous les pions &#224; leur position initiale (avec confirmation)</td></tr>
+<tr><td><strong>Bijoux : ON/OFF</strong></td><td>Bascule entre symboles g&#233;om&#233;triques et portraits</td></tr>
+<tr><td><strong>Loge : &#201;pique/Classique</strong></td><td>Bascule entre le mode couleur et le mode N&amp;B</td></tr>
+<tr><td><strong>Bulles : ON/OFF</strong></td><td>Active/d&#233;sactive les bulles de dialogue sur le plan</td></tr>
+<tr><td><strong>Musique : ON/OFF</strong></td><td>Active/d&#233;sactive les musiques de fond</td></tr>
+<tr><td><strong>Debug : ON/OFF</strong></td><td>Affiche les waypoints et les marqueurs</td></tr>
+<tr><td><strong>Positions</strong></td><td>Affiche les coordonn&#233;es des pions</td></tr>
+<tr><td><strong>Taille bulles</strong></td><td>Petit / Moyen / Grand</td></tr>
+<tr><td><strong>Cat&#233;chisme : ON/OFF</strong></td><td>Affiche ou masque le panneau cat&#233;chisme</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================ -->
+<!-- 6. Le flux des travaux -->
+<!-- ================================================================ -->
+<h2 id="s6">6. Le flux des travaux</h2>
+
+<p>Le flux des travaux transcrit en temps r&#233;el l'ensemble du rituel. Il affiche trois types de contenu :</p>
+
+<ul>
+    <li><strong>Dialogues des Officiers</strong> &#8212; texte dor&#233;</li>
+    <li><strong>Actions rituelles</strong> &#8212; texte gris en italique</li>
+    <li><strong>Informations syst&#232;me</strong> &#8212; texte bleu discret</li>
+</ul>
+
+<p>Le bouton <strong>&#171; Effacer le flux &#187;</strong> vide le contenu. Le d&#233;filement est automatique. La largeur du panneau est ajustable par glisser-d&#233;poser.</p>
+
+<!-- ================================================================ -->
+<!-- 7. Le cat&#233;chisme -->
+<!-- ================================================================ -->
+<h2 id="s7">7. Le cat&#233;chisme</h2>
+
+<p>Le panneau cat&#233;chisme est activable via le bouton <strong>&#171; Cat&#233;chisme : ON/OFF &#187;</strong> dans la section Syst&#232;me. Il affiche les questions et r&#233;ponses du cat&#233;chisme, organis&#233;es en sections, adapt&#233;es au grade de l'utilisateur connect&#233;.</p>
+
+<!-- ================================================================ -->
+<!-- 8. Tenue ordinaire -->
+<!-- ================================================================ -->
+<h2 id="s8">8. Simuler une Tenue ordinaire</h2>
+
+<p>Pour simuler une Tenue ordinaire, suivez cet ordre :</p>
+<ol>
+    <li>Entr&#233;e des Fr&#232;res</li>
+    <li>Ouverture des travaux</li>
+    <li>Cat&#233;chisme et/ou Instruction morale (facultatif)</li>
+    <li>Cl&#244;ture des travaux</li>
+</ol>
+
+<p><strong>Toujours attendre &#171; En attente &#187;</strong> dans la zone d'&#233;tape avant de lancer la s&#233;quence suivante.</p>
+
+<p><em>Raccourci :</em> le bouton <strong>&#171; Loge pr&#234;te &#187;</strong> place tous les pions en position de Tenue ouverte sans rejouer l'entr&#233;e et l'ouverture.</p>
+
+<!-- ================================================================ -->
+<!-- 9. Tenue de r&#233;ception -->
+<!-- ================================================================ -->
+<h2 id="s9">9. Simuler une Tenue de r&#233;ception</h2>
+
+<p>Pour simuler une Tenue de r&#233;ception, suivez cet ordre :</p>
+<ol>
+    <li>Entr&#233;e des Fr&#232;res</li>
+    <li>Ouverture des travaux</li>
+    <li>Proclamation &#8594; Introduction &#8594; Voyages &#8594; Serment &#8594; R&#233;ception &#8594; Lumi&#232;re &#8594; Investiture</li>
+    <li>Cl&#244;ture des travaux</li>
+</ol>
+
+<p>Les <strong>7 &#233;tapes</strong> de r&#233;ception doivent &#234;tre lanc&#233;es dans l'ordre.</p>
+
+<h3>Points importants</h3>
+<ul>
+    <li>La <strong>formation de la Loge</strong> se fait automatiquement lors de l'Introduction</li>
+    <li>Les <strong>Voyages</strong> comportent trois &#233;preuves : Feu, Eau, Terre</li>
+    <li>Le plan de loge est assombri pendant certaines phases c&#233;r&#233;monielles</li>
+    <li>Utilisez <strong>Espace</strong> pour mettre en pause ou reprendre &#224; tout moment</li>
+    <li>Utilisez <strong>&#201;chap</strong> pour ranger la loge (avec confirmation)</li>
+</ul>
+
+<!-- ================================================================ -->
+<!-- 10. Sons et musique -->
+<!-- ================================================================ -->
+<h2 id="s10">10. Sons et musique</h2>
+
+<h3>Sons rituels</h3>
+<p>Les coups de maillet sont synth&#233;tis&#233;s en temps r&#233;el via la Web Audio API. Les applaudissements sont &#233;galement synth&#233;tis&#233;s. Aucun fichier audio externe n'est n&#233;cessaire pour les sons rituels.</p>
+
+<h3>Musiques de fond</h3>
+<p>Les musiques de fond sont des fichiers MP3 stock&#233;s dans le dossier <code>imusic/</code>. Elles se d&#233;clenchent automatiquement &#224; certains moments du rituel. Le bouton <strong>Musique : ON/OFF</strong> permet de les activer ou d&#233;sactiver.</p>
+
+<!-- ================================================================ -->
+<!-- 11. Raccourcis clavier -->
+<!-- ================================================================ -->
+<h2 id="s11">11. Raccourcis clavier</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Touche</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td><strong>Espace</strong></td><td>Pause / Reprendre</td></tr>
+<tr><td><strong>&#201;chap</strong></td><td>Ranger la loge (avec confirmation)</td></tr>
+<tr><td><strong>D</strong></td><td>Debug ON/OFF</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================ -->
+<!-- 12. Trucs et astuces -->
+<!-- ================================================================ -->
+<h2 id="s12">12. Trucs et astuces</h2>
+
+<ul>
+    <li>Toujours attendre <strong>&#171; En attente &#187;</strong> avant de lancer la s&#233;quence suivante</li>
+    <li>Utiliser <strong>&#171; Loge pr&#234;te &#187;</strong> pour acc&#233;der directement &#224; une &#233;tape sans tout rejouer</li>
+    <li>Le mode Debug (touche <strong>D</strong>) rend tous les pions visibles et affiche les circuits</li>
+    <li>Pour s'entra&#238;ner sur une &#233;tape pr&#233;cise : <strong>&#171; Loge pr&#234;te &#187;</strong> puis l'&#233;tape souhait&#233;e</li>
+    <li>Le mode <strong>&#171; Classique &#187;</strong> (N&amp;B) est recommand&#233; pour les projections</li>
+    <li>Les pions sont repositionnables manuellement &#224; tout moment, m&#234;me pendant une animation</li>
+    <li>Ajustez la taille des bulles selon la r&#233;solution de votre &#233;cran</li>
+</ul>
+
+<!-- ================================================================ -->
+<!-- 13. Le Quiz du Cat&#233;chisme -->
+<!-- ================================================================ -->
+<h2 id="s13">13. Le Quiz du Cat&#233;chisme (XQuiz RER)</h2>
+
+<p>Le quiz est accessible depuis le fichier <code>quiz_rer.html</code> ou directement depuis la Loge. Le grade est transmis automatiquement ; il peut aussi &#234;tre forc&#233; via le param&#232;tre <code>?grade=</code>.</p>
+
+<h3>Structure du parcours</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Marches</th><th>Palier</th><th>Contenu</th></tr></thead>
+<tbody>
+<tr><td><strong>0&#8211;2</strong></td><td>Premier palier</td><td>Questions d'Apprenti</td></tr>
+<tr><td><strong>3&#8211;4</strong></td><td>Deuxi&#232;me palier</td><td>Questions de Compagnon</td></tr>
+<tr><td><strong>5&#8211;6</strong></td><td>Troisi&#232;me palier</td><td>Questions de Ma&#238;tre</td></tr>
+<tr><td><strong>7</strong></td><td>Section secr&#232;te</td><td>3 &#233;preuves sp&#233;ciales</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Plafonnement par grade</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Grade connect&#233;</th><th>Marches 0-2</th><th>Marches 3-4</th><th>Marches 5-6</th><th>Section secr&#232;te</th></tr></thead>
+<tbody>
+<tr><td>Apprenti</td><td>Apprenti</td><td>Apprenti</td><td>Apprenti</td><td>Apprenti</td></tr>
+<tr><td>Compagnon</td><td>Apprenti</td><td>Compagnon</td><td>Compagnon</td><td>Compagnon</td></tr>
+<tr><td>Ma&#238;tre</td><td>Apprenti</td><td>Compagnon</td><td>Ma&#238;tre</td><td>Ma&#238;tre</td></tr>
+<tr><td>Ma&#238;tre &#201;cossais</td><td>Apprenti</td><td>Compagnon</td><td>Ma&#238;tre</td><td>Ma&#238;tre &#201;cossais</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Interface du quiz</h3>
+<p>L'interface se compose de trois &#233;l&#233;ments : le <strong>cartouche</strong> (grade et score), le <strong>plateau</strong> (repr&#233;sentation du temple avec les marches) et la <strong>pioche</strong> (cartes de questions).</p>
+
+<h3>M&#233;canique de jeu</h3>
+<ul>
+    <li><strong>Bonne r&#233;ponse :</strong> +10 points, avance d'une marche</li>
+    <li><strong>Mauvaise r&#233;ponse :</strong> retour au dernier palier de s&#233;curit&#233; (marche 0, 3 ou 5)</li>
+    <li>Les transitions de grade sont anim&#233;es</li>
+</ul>
+
+<h3>La section secr&#232;te (marche 7)</h3>
+<ul>
+    <li><strong>&#201;preuve 1 :</strong> QCM avec chrono de 30 secondes</li>
+    <li><strong>&#201;preuve 2 :</strong> Texte &#224; trou</li>
+    <li><strong>&#201;preuve 3 :</strong> Question ouverte avec auto-&#233;valuation</li>
+    <li>1 joker disponible, +20 points par &#233;preuve r&#233;ussie</li>
+    <li>2<sup>e</sup> erreur : retour &#224; la marche 5</li>
+</ul>
+
+<h3>Victoire</h3>
+<p>L'&#233;cran de victoire affiche le score final, le temps &#233;coul&#233;, le taux de r&#233;ussite par grade (Apprenti, Compagnon, Ma&#238;tre, Section secr&#232;te), et la liste d&#233;roulante des questions manqu&#233;es. Deux boutons : <strong>Recommencer</strong> (nouvelle partie) et <strong>R&#233;viser mes erreurs</strong> (rejoue uniquement les questions manqu&#233;es, sans progression ni joker).</p>
+
+<hr class="gold-sep">
+
+<!-- FOOTER -->
+<div class="footer">
+    <div class="footer-stars">&#10022;&#8195;&#10022;&#8195;&#10022;</div>
+    <div class="footer-loge">R&#8756; L&#8756; Jean Mono&#239;kos &#8212; Rite &#201;cossais Rectifi&#233;</div>
+    <div class="footer-copy">&copy; Elricsonn</div>
+    <div class="footer-stars">&#10022;&#8195;&#10022;&#8195;&#10022;</div>
+</div>
+
+</main>
+</div>
+
+<!-- BACK TO TOP -->
+<button class="back-to-top" id="backToTop" aria-label="Retour en haut">&#8593;</button>
+
+<script>
+(function() {
+    /* === TOC toggle (mobile) === */
+    const tocToggle = document.getElementById('tocToggle');
+    const tocSidebar = document.getElementById('tocSidebar');
+    const tocOverlay = document.getElementById('tocOverlay');
+
+    function closeToc() {
+        tocSidebar.classList.remove('open');
+        tocOverlay.classList.remove('open');
+        tocToggle.classList.remove('open');
+    }
+    tocToggle.addEventListener('click', function() {
+        const isOpen = tocSidebar.classList.toggle('open');
+        tocOverlay.classList.toggle('open', isOpen);
+        tocToggle.classList.toggle('open', isOpen);
+    });
+    tocOverlay.addEventListener('click', closeToc);
+
+    /* Close TOC on link click (mobile) */
+    tocSidebar.querySelectorAll('a').forEach(function(a) {
+        a.addEventListener('click', function() {
+            if (window.innerWidth < 1100) closeToc();
+        });
+    });
+
+    /* === Active section highlighting === */
+    const tocLinks = tocSidebar.querySelectorAll('a[href^="#s"]');
+    const sections = [];
+    tocLinks.forEach(function(link) {
+        var id = link.getAttribute('href').substring(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+    });
+
+    function updateActive() {
+        var current = null;
+        for (var i = sections.length - 1; i >= 0; i--) {
+            if (sections[i].el.getBoundingClientRect().top <= 120) {
+                current = sections[i];
+                break;
+            }
+        }
+        tocLinks.forEach(function(l) { l.classList.remove('active'); });
+        if (current) {
+            current.link.classList.add('active');
+            /* Scroll TOC to keep active link visible */
+            var linkTop = current.link.offsetTop;
+            var sidebarHeight = tocSidebar.clientHeight;
+            var sidebarScroll = tocSidebar.scrollTop;
+            if (linkTop < sidebarScroll + 60 || linkTop > sidebarScroll + sidebarHeight - 60) {
+                tocSidebar.scrollTo({ top: linkTop - sidebarHeight / 3, behavior: 'smooth' });
+            }
+        }
+    }
+
+    var rafPending = false;
+    window.addEventListener('scroll', function() {
+        if (!rafPending) {
+            rafPending = true;
+            requestAnimationFrame(function() {
+                updateActive();
+                rafPending = false;
+            });
+        }
+    }, { passive: true });
+    updateActive();
+
+    /* === Back to top === */
+    var backBtn = document.getElementById('backToTop');
+    window.addEventListener('scroll', function() {
+        backBtn.classList.toggle('visible', (window.scrollY || window.pageYOffset) > 400);
+    }, { passive: true });
+    backBtn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
+</script>
+</body>
+</html>
