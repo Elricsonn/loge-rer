@@ -73,6 +73,153 @@
     min-height: 1.2em; font-family: 'Cinzel', serif;
   }
   .etoile-login { color: #d4a84b; font-size: 1.4em; opacity: 0.6; }
+  .btn-guide {
+    color: #8b6914; font-family: 'Cinzel', serif; font-size: 0.8em;
+    letter-spacing: 2px; text-decoration: none;
+    border: 1px solid #3a2a0a; border-radius: 4px;
+    padding: 7px 18px; transition: all 0.2s;
+    background: transparent;
+  }
+  .btn-guide:hover { color: #d4a84b; border-color: #8b6914; background: rgba(26,16,0,0.6); }
+
+  /* ── Jauge thermomètre + détail (login) ── */
+  #dev-progress {
+    position: fixed; left: 18px; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: stretch; gap: 0;
+    z-index: 100000;
+  }
+  /* bouton d'appel — toujours visible */
+  #dev-progress .dp-tab {
+    width: 28px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; padding: 10px 4px;
+    background: #0f0b06; border: 1px solid #2a2015; border-radius: 6px;
+    transition: border-color 0.2s;
+  }
+  #dev-progress .dp-tab:hover { border-color: #8b6914; }
+  #dev-progress .dp-tab-pct {
+    font-family: 'Cinzel', serif; font-size: .55rem; font-weight: 700;
+    color: #d4a84b; writing-mode: vertical-rl; text-orientation: mixed;
+    letter-spacing: .05em;
+  }
+  #dev-progress .dp-tab-arrow {
+    font-size: .6rem; color: #6a5a3e; transition: transform 0.3s;
+  }
+  #dev-progress.show-thermo .dp-tab-arrow { transform: rotate(90deg); }
+  /* colonne thermomètre — niveau 1 */
+  #dev-progress .dp-thermo {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer;
+    overflow: hidden; max-width: 0; opacity: 0;
+    transition: max-width 0.35s ease, opacity 0.3s ease, margin 0.35s ease;
+    margin-left: 0;
+  }
+  #dev-progress.show-thermo .dp-thermo {
+    max-width: 60px; opacity: 1; margin-left: 12px;
+  }
+  #dev-progress .dp-pct {
+    font-family: 'Cinzel', serif; font-size: .9rem; font-weight: 700;
+    color: #d4a84b; letter-spacing: .05em;
+    text-shadow: 0 0 12px rgba(212,168,75,0.4);
+  }
+  #dev-progress .dp-tube-outer {
+    width: 26px; height: 340px; border-radius: 13px;
+    background: #0f0b06; border: 1px solid #2a2015;
+    position: relative; overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 0 15px rgba(0,0,0,0.4);
+  }
+  #dev-progress .dp-fill-done {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    background: linear-gradient(0deg, #2a6e3f, #3a8f4f);
+    border-radius: 0 0 12px 12px;
+    transition: height 0.6s ease;
+  }
+  #dev-progress .dp-fill-wip {
+    position: absolute; left: 0; width: 100%;
+    background: linear-gradient(0deg, #c47a20, #d48a2b);
+    transition: height 0.6s ease, bottom 0.6s ease;
+  }
+  #dev-progress .dp-ticks {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  #dev-progress .dp-tick {
+    position: absolute; right: 0; height: 1px;
+  }
+  #dev-progress .dp-tick.major { width: 9px; background: #2a201588; }
+  #dev-progress .dp-tick.minor { width: 5px; background: #1e160844; }
+  #dev-progress .dp-bulb {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 38%, #4aaf5f, #2a6e3f 70%);
+    border: 1px solid #2a2015; margin-top: -6px;
+    box-shadow: 0 0 14px rgba(74,159,95,0.3), inset 0 -2px 6px rgba(0,0,0,0.3);
+  }
+  #dev-progress .dp-toggle {
+    font-size: .6rem; color: #6a5a3e; margin-top: 4px;
+    transition: transform 0.3s;
+  }
+  #dev-progress.show-detail .dp-toggle { transform: rotate(180deg); }
+  /* colonne détail — niveau 2 */
+  #dev-progress .dp-detail {
+    display: flex; flex-direction: column; justify-content: center; gap: 0;
+    overflow: hidden; max-width: 0; opacity: 0;
+    transition: max-width 0.35s ease, opacity 0.3s ease, margin 0.35s ease;
+    margin-left: 0;
+  }
+  #dev-progress.show-detail .dp-detail {
+    max-width: 260px; opacity: 1; overflow: visible; margin-left: 14px;
+  }
+  #dev-progress .dp-detail-title {
+    font-family: 'Cinzel', serif; font-size: .6rem; letter-spacing: .18em;
+    text-transform: uppercase; color: #d4a84b; margin-bottom: 8px;
+    padding-bottom: 5px; border-bottom: 1px solid #2a2015;
+  }
+  #dev-progress .dp-row {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Crimson Text', serif; font-size: .76rem;
+    line-height: 1.3; padding: 2px 0;
+  }
+  #dev-progress .dp-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+  #dev-progress .dp-dot.full  { background: #4a9f5f; box-shadow: 0 0 4px #4a9f5f44; }
+  #dev-progress .dp-dot.part  { background: #d48a2b; box-shadow: 0 0 4px #d48a2b44; }
+  #dev-progress .dp-dot.empty { background: #b83030; box-shadow: 0 0 4px #b8303044; }
+  #dev-progress .dp-row .dp-name { color: #9a8a6e; min-width: 110px; }
+  #dev-progress .dp-row .dp-count { color: #6a5a3e; font-size: .7rem; }
+  #dev-progress .dp-row { position: relative; cursor: default; }
+  #dev-progress .dp-sub {
+    display: none; position: absolute; left: 100%; top: -4px;
+    margin-left: 8px; z-index: 10;
+    background: #131008; border: 1px solid #2a2015; border-radius: 5px;
+    padding: 6px 12px; min-width: 160px; white-space: nowrap;
+    box-shadow: 0 0 16px rgba(0,0,0,0.6);
+  }
+  #dev-progress .dp-row:hover .dp-sub { display: block; }
+  #dev-progress .dp-sub-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: .72rem; line-height: 1.5; color: #8a7a5e;
+  }
+  #dev-progress .dp-sub-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+  #dev-progress .dp-sub-dot.s-done  { background: #4a9f5f; }
+  #dev-progress .dp-sub-dot.s-wip   { background: #d48a2b; }
+  #dev-progress .dp-sub-dot.s-todo  { background: #b83030; }
+  /* légende + totaux */
+  #dev-progress .dp-summary {
+    margin-top: 10px; padding-top: 8px; border-top: 1px solid #2a2015;
+    font-family: 'Crimson Text', serif; font-size: .72rem; color: #6a5a3e;
+    display: flex; gap: 10px;
+  }
+  #dev-progress .dp-summary i {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    margin-right: 3px; vertical-align: middle;
+  }
+  #dev-progress .dp-summary .lg-done { background: #4a9f5f; }
+  #dev-progress .dp-summary .lg-wip  { background: #d48a2b; }
+  #dev-progress .dp-summary .lg-todo { background: #b83030; }
+  #dev-progress .dp-summary span { color: #d4a84b; font-weight: 600; }
+  @media (max-width: 1100px) { #dev-progress { display: none; } }
 
   /* ── Panneaux latéraux : transitions ── */
   #regie-panel        { transition: transform 0.28s ease; }
@@ -144,8 +291,210 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════
+     REGISTRE DE PROGRESSION DU DÉVELOPPEMENT
+     ──────────────────────────────────────────────────────────
+     Statuts possibles :  "done"  = fait et débuggé
+                          "wip"   = fait, non débuggé
+                          "todo"  = non fait
+     Pour mettre à jour : modifier le statut dans DEV_STATUS.
+     ══════════════════════════════════════════════════════════ -->
+<script>
+const DEV_STATUS = {
+  // ════════════════════════════════════════════════════════
+  //  ORDRE : du bas (Entrée) vers le haut (ME / Système)
+  //  Le rendu inverse la liste pour aligner avec le thermomètre.
+  // ════════════════════════════════════════════════════════
+
+  // ── 1. Entrée en Loge ──
+  "Entrée en Loge": {
+    "Entrée des Frères":    "done",
+    "Entrée Apprentis":     "done",
+    "Entrée Compagnons":    "done",
+    "Entrée Maîtres":       "done",
+    "Entrée Orient":        "done"
+  },
+  // ── 2. Ouverture Apprenti ──
+  "Ouverture App.": {
+    "Ouverture Apprenti":   "done"
+  },
+  // ── 3. Catéchisme Apprenti ──
+  "Catéchisme App.": {
+    "Complet":  "done",
+    "Section 1":     "done",
+    "Section 2":     "done",
+    "Section 3":     "done"
+  },
+  // ── 4. Instruction Apprenti ──
+  "Instruction App.": {
+    "Instruction morale":   "done"
+  },
+  // ── 5. Clôture Apprenti ──
+  "Clôture App.": {
+    "Clôture Apprenti":     "done"
+  },
+  // ── 6. Règle en 9 points ──
+  "Règle": {
+    "Règle (complète)":     "done",
+    "Articles I à III":     "done",
+    "Articles IV à VI":     "done",
+    "Articles VII à IX":    "done"
+  },
+  // ── 7. Réception Apprenti (6 étapes) ──
+  "Réception App.": {
+    "Proclamation":     "done",
+    "Introduction":     "done",
+    "Voyages":          "done",
+    "Serment":          "done",
+    "Lumière":          "done",
+    "Investiture":      "done"
+  },
+  // ── 8. Loge Compagnon ──
+  "Loge Comp.": {
+    "Ouverture":            "wip",
+    "Catéchisme complet":   "wip",
+    "Catéchisme §1":        "wip",
+    "Catéchisme §2":        "wip",
+    "Catéchisme §3":        "wip",
+    "Instruction":          "wip",
+    "Clôture":              "wip"
+  },
+  // ── 9. Réception Compagnon ──
+  "Réception Comp.": {
+    "Proclamation":     "wip",
+    "Introduction":     "wip",
+    "Voyages":          "wip",
+    "Serment":          "wip",
+    "Réception":        "wip",
+    "Lumière":          "wip",
+    "Investiture":      "wip"
+  },
+  // ── 10. Loge Maître ──
+  "Loge Maître": {
+    "Ouverture":            "wip",
+    "Catéchisme complet":   "wip",
+    "Catéchisme §1":        "wip",
+    "Catéchisme §2":        "wip",
+    "Catéchisme §3":        "wip",
+    "Instruction":          "wip",
+    "Clôture":              "wip"
+  },
+  // ── 11. Réception Maître ──
+  "Réception Maître": {
+    "Proclamation":     "wip",
+    "Introduction":     "wip",
+    "Voyages":          "wip",
+    "Serment":          "wip",
+    "Réception":        "wip",
+    "Lumière":          "wip",
+    "Investiture":      "wip"
+  },
+  // ── 12. Loge ME ──
+  "Loge ME": {
+    "Ouverture":            "wip",
+    "Catéchisme complet":   "wip",
+    "Catéchisme §1":        "wip",
+    "Catéchisme §2":        "wip",
+    "Catéchisme §3":        "wip",
+    "Instruction":          "wip",
+    "Clôture":              "wip"
+  },
+  // ── 13. Réception ME ──
+  "Réception ME": {
+    "Proclamation":     "wip",
+    "Introduction":     "wip",
+    "Voyages":          "wip",
+    "Serment":          "wip",
+    "Réception":        "wip",
+    "Lumière":          "wip",
+    "Investiture":      "wip"
+  },
+  // ── 14. Transitions ──
+  "Transitions": {
+    "Conformité Comp.":       "wip",
+    "Retour conf. Apprentis": "wip",
+    "Conformité Maître":      "wip",
+    "Retour conf. Compagnons":"wip",
+    "Conformité ME":          "wip"
+  },
+  // ── 15. Sorties / Retours ──
+  "Sorties": {
+    "Sortie Apprentis":       "wip",
+    "Retour Apprentis":       "wip",
+    "Sortie Compagnons":      "wip",
+    "Retour Compagnons":      "wip"
+  },
+  // ── 16. Raccourcis ──
+  "Raccourcis": {
+    "Loge prête":   "done"
+  }
+};
+
+function _renderDevProgress() {
+  const el = document.getElementById('dev-progress');
+  if (!el) return;
+  let total = 0, done = 0, wip = 0;
+  for (const cat of Object.values(DEV_STATUS))
+    for (const s of Object.values(cat)) { total++; if (s === 'done') done++; else if (s === 'wip') wip++; }
+  const todo = total - done - wip;
+  const pctDone = (done / total * 100);
+  const pctWip  = (wip / total * 100);
+  // Graduations
+  let ticks = '';
+  for (let p = 10; p <= 90; p += 10) {
+    const cls = (p % 25 === 0) ? 'major' : 'minor';
+    ticks += '<div class="dp-tick ' + cls + '" style="bottom:' + p + '%"></div>';
+  }
+  // Onglet d'appel (toujours visible)
+  let html = '<div class="dp-tab">';
+  html += '<div class="dp-tab-pct">' + Math.round(pctDone) + '%</div>';
+  html += '<div class="dp-tab-arrow">&#9654;</div>';
+  html += '</div>';
+  // Colonne thermomètre (niveau 1)
+  html += '<div class="dp-thermo">';
+  html += '<div class="dp-pct">' + Math.round(pctDone) + '%</div>';
+  html += '<div class="dp-tube-outer">';
+  html += '  <div class="dp-fill-done" style="height:' + pctDone.toFixed(1) + '%"></div>';
+  html += '  <div class="dp-fill-wip" style="bottom:' + pctDone.toFixed(1) + '%;height:' + pctWip.toFixed(1) + '%"></div>';
+  html += '  <div class="dp-ticks">' + ticks + '</div>';
+  html += '</div>';
+  html += '<div class="dp-bulb"></div>';
+  html += '<div class="dp-toggle">&#9654;</div>';
+  html += '</div>';
+  // Colonne détail
+  html += '<div class="dp-detail">';
+  html += '<div class="dp-detail-title">Avancement</div>';
+  const entries = Object.entries(DEV_STATUS);
+  for (let ei = entries.length - 1; ei >= 0; ei--) {
+    const [catName, items] = entries[ei];
+    const cd = Object.values(items).filter(s => s === 'done').length;
+    const cw = Object.values(items).filter(s => s === 'wip').length;
+    const ct = Object.values(items).length;
+    const dotCls = cd === ct ? 'full' : (cd + cw > 0 ? 'part' : 'empty');
+    html += '<div class="dp-row">';
+    html += '  <div class="dp-dot ' + dotCls + '"></div>';
+    html += '  <div class="dp-name">' + catName + '</div>';
+    html += '  <div class="dp-count">' + cd + '/' + ct + '</div>';
+    html += '  <div class="dp-sub">';
+    for (const [name, status] of Object.entries(items))
+      html += '<div class="dp-sub-item"><div class="dp-sub-dot s-' + status + '"></div>' + name + '</div>';
+    html += '  </div>';
+    html += '</div>';
+  }
+  // Légende
+  html += '<div class="dp-summary">';
+  html += '  <span><i class="lg-done"></i> <span>' + done + '</span> débuggé</span>';
+  html += '  <span><i class="lg-wip"></i> <span>' + wip + '</span> non débuggé</span>';
+  html += '  <span><i class="lg-todo"></i> <span>' + todo + '</span> non fait</span>';
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+</script>
+
 <!-- ÉCRAN DE LOGIN -->
 <div id="login-screen">
+  <div id="dev-progress"></div>
   <div class="etoile-login">✦ ✦ ✦</div>
   <h1>RITUEL R∴E∴R∴</h1>
   <div class="subtitle">Rite Écossais Rectifié</div>
@@ -164,6 +513,7 @@
   </div>
   <div class="separateur"></div>
   <div class="etoile-login">✦</div>
+  <a href="guide_utilisateur.html" target="_blank" class="btn-guide">Guide de l'utilisateur</a>
   <div style="margin-top:28px; color:#d4a84b; font-family:'Cinzel', serif; font-size:1.1em; letter-spacing:3px; text-shadow:0 0 12px rgba(212,168,75,0.3);">© Elricsonn</div>
 </div>
 
@@ -1433,6 +1783,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const g = params.get('grade');
     if (g) document.getElementById('login-grade').value = g;
+    // Panneau de progression (accordéon tout-ou-rien)
+    _renderDevProgress();
+    const dp = document.getElementById('dev-progress');
+    const dpTab = dp && dp.querySelector('.dp-tab');
+    if (dpTab) dpTab.addEventListener('click', () => {
+        const open = dp.classList.contains('show-thermo');
+        dp.classList.toggle('show-thermo', !open);
+        dp.classList.toggle('show-detail', !open);
+    });
 });
 
 // ─── RACCOURCIS CLAVIER ───────────────────────────────────────────────────────
