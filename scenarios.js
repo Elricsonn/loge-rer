@@ -4180,7 +4180,7 @@ receptionVoyages: async function() {
 
         // ── Sortie en cortège ─────────────────────────────────────────────────
         this.action("Le Maître des Cérémonies monte à l'Orient chercher le Vénérable Maître. Le cortège s'ébranle, les Frères suivent. Les Surveillants ferment la marche.");
-        jouerMusique('05 - sortie.mp3');
+        jouerMusique('05 - Sortie.mp3');
 
         const self = this;
         const DS = self.DUREE_WP;

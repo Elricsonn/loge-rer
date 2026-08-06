@@ -11,3 +11,6 @@ _deploy/
 # Système
 .DS_Store
 .claude/
+
+# Fichiers de travail Claude (non publiés)
+memory/
