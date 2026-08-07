@@ -1,0 +1,46 @@
+/* ── LOGE R∴E∴R∴ — spécifique au site ────────────────────────────
+   Ne concerne QUE la page d'accueil (index.html). L'application
+   elle-même (Loge_RER.html) garde ses styles propres : c'est un
+   plateau SVG, pas une page de contenu.
+   ─────────────────────────────────────────────────────────────── */
+
+/* Bandeau d'entrée ------------------------------------------------ */
+.bandeau { min-height: 78vh; }
+.bandeau-titre { line-height: 1.15; }
+.bandeau-sous { font-family: var(--font-titre); font-size: 0.82rem;
+  letter-spacing: 0.34em; text-indent: 0.34em; color: var(--texte-meta);
+  text-transform: uppercase; }
+
+/* Grille des grades ----------------------------------------------- */
+.grades { display: grid; gap: var(--sp-4);
+  grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1180px) { .grades { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .grades { grid-template-columns: 1fr; } }
+.grade { display: flex; flex-direction: column; gap: var(--sp-2);
+  padding: var(--sp-5); text-align: center;
+  border: 1px solid var(--or-ombre); border-radius: var(--r-lg);
+  background: var(--fond-panneau); }
+.grade-rang { font-family: var(--font-titre); font-size: 0.7rem;
+  letter-spacing: 0.24em; text-indent: 0.24em; color: var(--texte-meta); }
+.grade-nom { font-family: var(--font-titre); font-weight: 600;
+  font-size: 1.12rem; letter-spacing: 0.08em; text-indent: 0.08em;
+  color: var(--or); }
+.grade-note { font-size: 0.95rem; color: var(--texte-doux); }
+
+/* Ressources ------------------------------------------------------ */
+.liens { display: grid; gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.lien-carte { display: flex; flex-direction: column; gap: var(--sp-2);
+  padding: var(--sp-5); text-decoration: none;
+  border: 1px solid var(--or-ombre); border-radius: var(--r-lg);
+  background: var(--fond-panneau); transition: border-color var(--t), transform var(--t); }
+.lien-carte:hover { border-color: var(--or-fonce); transform: translateY(-2px); }
+.lien-titre { font-family: var(--font-titre); font-weight: 600;
+  letter-spacing: 0.06em; text-indent: 0.06em; color: var(--or); }
+.lien-note { font-size: 0.95rem; color: var(--texte-doux); }
+
+/* Avertissement --------------------------------------------------- */
+.note-cadre { max-width: var(--largeur-texte); margin-inline: auto;
+  padding: var(--sp-5); border: 1px solid var(--or-ombre);
+  border-radius: var(--r-lg); background: rgba(212, 168, 75, 0.04);
+  font-size: 0.98rem; color: var(--texte-doux); text-align: center; }

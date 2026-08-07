@@ -7294,6 +7294,7 @@ receptionVoyages: async function() {
 
     receptionMEProclamation: async function() {
         this._setEtape("Réception M.É. — Proclamation");
+        if (this._resetElementsME) this._resetElementsME();
         // La proclamation est intégrée dans ouvertureME (motif + parrain + préparateur)
         this.action("La proclamation a été faite lors de l'ouverture de la Loge Écossaise. Le MdC se rend auprès du candidat.");
         await this.pause(this.PAUSE_ACTION);
@@ -7358,6 +7359,7 @@ receptionVoyages: async function() {
         this.action("Le MdC place le candidat à l'Occident entre les deux Surveillants, lui fait incliner devant le Député Maître et lui montre le premier tableau avec la pointe de son épée.");
         await this.parler('M.d.C', "Considérez attentivement les débris de ce Temple majestueux, qui fut l'une des merveilles du monde.");
         this.action("On laisse le candidat à ses réflexions pendant quelques instants.");
+        this._afficherTableauME(1);
         await this.pause(P * 2);
     },
 
@@ -7382,15 +7384,8 @@ receptionVoyages: async function() {
         await this.pause(P);
 
         // Les pas de la marche ME — 4 pas sur les 4 portes
-        this.action("Le 2°S. ôte les chaînes du candidat et les dépose au bas du tableau. Le 1°S. lui fait faire les 4 pas de la marche ME : pied gauche sur la porte d'Occident, pied droit sur la porte du Midi, pied gauche sur la porte du Nord, pied droit sur la porte d'Orient. Puis 3 pas d'équerre vers l'autel.");
-        await this.processer('pion-m', D,
-            { x: 495, y: 565 }, // porte Occident
-            { x: 630, y: 790 }, // porte Midi
-            { x: 630, y: 340 }, // porte Nord
-            { x: 765, y: 565 }, // porte Orient
-            { x: 630, y: 400 },
-            WP[5]               // autel
-        );
+        this.action("Le 2°S. ôte les chaînes du candidat et les dépose au bas du tableau.");
+        await this._marcheQuatrePortesME('pion-m');
         await this.pause(P);
     },
 
@@ -7418,6 +7413,7 @@ receptionVoyages: async function() {
 
     receptionMEReception: async function() {
         this._setEtape("Réception M.É. — Réception");
+        this._afficherTableauME(2);
         const P = this.PAUSE_ACTION;
         const D = this.DUREE_WP;
 
@@ -7434,6 +7430,7 @@ receptionVoyages: async function() {
         await this.parler('1°S.', "Respectable Député Maître, le Frère Écossais est à l'Occident et y attend vos ordres.");
         await this.parler('D.M.', "Frère Écossais ! Le travail que vous allez entreprendre est pénible et difficile. Souvent il rend téméraire celui qui s'y livre inconsidérément. Frère Premier Surveillant ! Faites connaître à ce nouveau Frère la vertu qui lui manque, celle du Maître Écossais, afin qu'il apprenne à en faire un bon usage.");
         this.action("On découvre le transparent portant le mot FORCE.");
+        this._revelerTransparentForceME();
         await this.parler('1°S.', "Mon Frère, voilà la vertu que vous désirez d'acquérir ; ne la considérez pas en vain.");
         await this.pause(P);
         await this.parler('1°S.', "Respectable Député Maître, le nouveau Frère connaît la vertu particulière de son grade.");
@@ -7442,8 +7439,7 @@ receptionVoyages: async function() {
         await this.pause(P);
 
         // Découverte du tapis avec la truelle — 4 côtés
-        this.action("Le candidat, aidé des Surveillants, tient l'épée de la main gauche et découvre avec la truelle (main droite) les quatre côtés du tapis successivement, ramassant le voile au milieu. Il découvre le chandelier à sept branches, la table des pains de proposition, les quatre instruments maçonniques, et la place de l'autel des parfums.");
-        await this.pause(P);
+        await this._decouvrirTapisME('pion-m');
         await this.parler('1°S.', "Respectable Député Maître, le Frère Écossais a déjà découvert le chandelier à sept branches, la table des pains de proposition et les quatre instruments maçonniques sans lesquels toute construction serait irrégulière ; il a aussi rétabli la place destinée à recevoir l'autel des parfums.");
         await this.parler('D.M.', "Frères Surveillants, aidez-lui à relever l'autel même, pour qu'il y offre son parfum.");
         this.action("Le candidat va prendre l'autel d'or à l'angle sud-est du tableau, le découvre et le pose dans le carré désigné sur le tapis. Il prend le vase d'esprit de vin et en remplit la cavité de l'autel.");
@@ -7454,6 +7450,7 @@ receptionVoyages: async function() {
         await this.parler('1°S.', "Respectable Député Maître, voilà la récompense de ce Frère ! Il a trouvé la lame d'or du Temple, sur laquelle on peut lire le Nom Sacré.");
         await this.parler('D.M.', "Mon Frère, l'heureuse découverte que vous venez de faire est, pour vous comme pour nous, du plus précieux augure. Prononcez avec confiance ce NOM, qui fut jadis la Gloire du Temple et fit le bonheur de la nation.");
         this.action("Le candidat prononce à haute voix le Nom JEHOVA gravé sur la lame triangulaire. Aussitôt le 2°S. enflamme l'esprit de vin sur l'autel. Le MdC allume les quatre flambeaux à quatre lumières.");
+        await this._revelationJehovaME();
         await this.pause(P);
 
         await this.parler('D.M.', "Mes Frères, nos maux sont finis, et nos succès sont désormais assurés par ce signe des faveurs célestes qui se répandent sur nous. Soyons donc fermes et inébranlables dans la pratique des vertus qui nous en assureront aussi la durée.");
@@ -7498,6 +7495,8 @@ receptionVoyages: async function() {
         await this.parler('D.M.', "Mais, comme dans cette douloureuse révolution du Temple ses fondements furent encore conservés, de même aussi les vrais Maçons qui ont conservé, comme Esdras, le Livre Saint de la Loi, pour la méditer avec fruit, qui ont su que le Feu sacré n'était pas éteint et pouvait se ranimer encore, cédant pour un temps au torrent des circonstances, ont gardé soigneusement le dépôt précieux qui leur était transmis. Lorsqu'ils ont vu les Maçons égarés se repentir, à l'exemple des Israélites, de leurs fautes, et gémir sous les abus qui s'étaient introduits presque partout, alors ils ont fait reparaître dans tout leur éclat ces règles primitives, conservées dans leur pureté fondamentale. Avant de les publier et pour ne point les exposer à de nouvelles profanations, nouveaux Esdras, ils ont fait sentir au peuple Maçon la nécessité de se réformer, de purger les Loges et leurs travaux des innovations que le second état de l'Ordre avait introduites, des abus et des systèmes nuls, faux ou dangereux, qui ne tendaient qu'à défigurer de plus en plus le saint but fondamental de l'institution.");
         await this.parler('D.M.', "Alors, le Temple a été réédifié ; le Mot sacré a été retrouvé et la Franc-Maçonnerie a repris un nouveau lustre, qu'elle conservera tant que les Maçons ne perdront pas de vue les principes invariables sur lesquels elle est fondée. C'est cet état actuel de l'Ordre dans la Franc-Maçonnerie Rectifiée qui vous a été représenté par la troisième époque du Temple de Jérusalem, rebâti par Zorobabel ; c'est aussi cette classe d'ouvriers désabusés et réformés, dont vous avez demandé d'augmenter le nombre. Après nous être assurés, autant qu'il dépendait de nous, de vos vraies dispositions, nous nous sommes empressés de satisfaire vos désirs ; mais n'oubliez jamais, mon cher Frère, à quelles conditions vous l'avez obtenu.");
         this.action("Le Maître des Cérémonies dévoile le double triangle flamboyant et remplace le deuxième tableau par le troisième.");
+        this._revelerDoubleTriangleME();
+        this._afficherTableauME(3);
         await this.pause(P);
 
         // Explication du 3e tableau — Hiram sortant du tombeau
@@ -7517,6 +7516,7 @@ receptionVoyages: async function() {
 
         // Le Député Maître rend le chapeau + 4e tableau
         this.action("Le Député Maître rend son chapeau au candidat. Les Surveillants le ramènent à l'Occident en face du dernier tableau.");
+        this._afficherTableauME(4);
         await this.processer('pion-m', D, WP[1]);
         await this.parler('D.M.', "Mon cher Frère, le tableau qui est devant vous est le dernier qui vous sera offert ; il vous présente des objets nouveaux, auxquels vous devez tout votre respect. Les symboles ont disparu, comme on vous l'avait annoncé. C'est la vérité même qui s'offre à vos regards, quoiqu'encore légèrement voilée sous des formes allégoriques.");
         await this.parler('D.M.', "Vous y voyez un carré parfait, qui figure l'enceinte et les douze portes de la Nouvelle Jérusalem ; au milieu de cette enceinte, une montagne qui figure la Nouvelle Sion Céleste et, sur son sommet, l'Agneau triomphant, désigné par les lettres A.D. — Agnus Dei. Au bas du même tableau, vous voyez aussi une figure de Saint André, sur la croix qui caractérise ce patron spécial de la classe à laquelle vous appartenez aujourd'hui.");
