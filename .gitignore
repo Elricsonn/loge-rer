@@ -14,3 +14,6 @@ _deploy/
 
 # Fichiers de travail Claude (non publiés)
 memory/
+
+# Paquet de travail de la refonte (documentation et modules non appliqués)
+refactor/00 - Paquet de travail (non publié)/
