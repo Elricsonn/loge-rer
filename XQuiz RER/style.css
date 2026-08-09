@@ -404,6 +404,9 @@ body {
     flex: 1;
     justify-content: center;
     overflow-y: auto;
+    /* Le survol décale le bouton de 5 px vers la droite ; sans cette réserve,
+       overflow-y (qui rogne aussi en x) mangerait son trait de bordure. */
+    padding-right: 6px;
 }
 
 .btn-answer {
