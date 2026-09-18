@@ -2077,9 +2077,9 @@ ouvertureTravaux: async function() {
 // ─── SON TONNERRE ────────────────────────────────────────────────────────────
 tonnerre: function() {
     return new Promise(resolve => {
-        const audio = new Audio('imusic/11 - Tonnerre.mp3');
-        audio.play().catch(e => console.warn("Tonnerre indisponible", e));
-        setTimeout(() => { audio.pause(); audio.currentTime = 0; resolve(); }, 7000);
+        // AudioManager (refactor/robustesse.js) : mp3 absent ou lecture bloquée tolérés
+        const audio = AudioManager.jouer('imusic/11 - Tonnerre.mp3');
+        setTimeout(() => { AudioManager.arreter(audio, false); if (audio) audio.currentTime = 0; resolve(); }, 7000);
     });
 },
 
@@ -7596,32 +7596,17 @@ let _musiqueAudio = null;
 function jouerMusique(fichier) {
     if (!_musiqueActive) return;
     if (_musiqueAudio) {
-        _musiqueAudio.pause();
-        _musiqueAudio.src = '';
+        AudioManager.arreter(_musiqueAudio, false);
         _musiqueAudio = null;
     }
-    _musiqueAudio = new Audio('imusic/' + fichier);
-    _musiqueAudio.volume = 0.6;
-    _musiqueAudio.loop = false;
-    _musiqueAudio.play().catch(() => {});
+    // AudioManager (refactor/robustesse.js) : cache, mp3 absent signalé, autoplay toléré
+    _musiqueAudio = AudioManager.jouer('imusic/' + fichier, { volume: 0.6 });
 }
 
 function arreterMusique(fondu = false) {
     if (!_musiqueAudio) return;
-    if (!fondu) {
-        _musiqueAudio.pause();
-        _musiqueAudio = null;
-        return;
-    }
-    const audio = _musiqueAudio;
-    const tick = setInterval(() => {
-        if (audio.volume > 0.05) {
-            audio.volume = Math.max(0, audio.volume - 0.05);
-        } else {
-            audio.pause();
-            clearInterval(tick);
-        }
-    }, 100);
+    // Arrêt net, ou fondu de −0,05 toutes les 100 ms (AudioManager.arreter)
+    AudioManager.arreter(_musiqueAudio, fondu);
     _musiqueAudio = null;
 }
 

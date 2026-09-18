@@ -1803,6 +1803,8 @@ function _renderDevProgress() {
 <script src="refactor/catechismes.data.js"></script>
 <!-- Refonte : sauvegarde et reprise de session après rafraîchissement -->
 <script src="refactor/persistence.js"></script>
+<!-- Refonte : chargement d'images, audio et cérémonies protégées -->
+<script src="refactor/robustesse.js"></script>
 
 <script>
 // ─── AUTHENTIFICATION
@@ -1935,7 +1937,16 @@ function _activerGrade(grade) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('copyright-loge').style.display = 'block';
     _initPanneauxToggle();
-    document.getElementById('menu-regie').innerHTML = genererMenu();
+    const menuHtml = genererMenu();
+    document.getElementById('menu-regie').innerHTML = menuHtml;
+    // Cérémonies protégées (refactor/robustesse.js) : toute méthode de Rituel
+    // lancée depuis la régie trace une éventuelle erreur dans le flux au lieu
+    // d'échouer en silence. Après les correctifs, qui réassignent des méthodes.
+    if (typeof protegerCeremonies === 'function' && typeof Rituel !== 'undefined') {
+        const noms = new Set((menuHtml.match(/Rituel\.\w+\(/g) || []).map(m => m.slice(7, -1)));
+        noms.delete('_setEtape');
+        protegerCeremonies(Rituel, Array.from(noms));
+    }
     const titres = {
         apprenti:  "Loge d'Apprenti",
         compagnon: "Loge de Compagnon",
@@ -2020,7 +2031,9 @@ function toggleCatechisme() {
 // ─── CONFORMITÉ DU TEMPLE ─────────────────────────────────────────────────────
 /* Version des visuels du plateau. Remplace '?v=' + Date.now(), qui forçait un
    rechargement réseau à chaque changement de grade et annulait tout cache.
-   À incrémenter quand une image de images/ change. */
+   À incrémenter quand une image de images/ change. Les changements d'image
+   passent par chargerImage() (refactor/robustesse.js) : sonde de préchargement,
+   repli visible si le fichier manque, URL versionnée conservée telle quelle. */
 const _VISUELS_V = '2';
 
 const _CONFORMITE = {
@@ -2077,7 +2090,7 @@ function miseEnConformite(grade) {
 
     // Tapis
     const tapis = document.getElementById('tapis-loge');
-    if (tapis) tapis.setAttribute('href', (cl && conf.tapisCl ? conf.tapisCl : conf.tapis) + '?v=' + _VISUELS_V);
+    if (tapis) chargerImage(tapis, (cl && conf.tapisCl ? conf.tapisCl : conf.tapis) + '?v=' + _VISUELS_V);
 
     // Tableaux — masquer tous, afficher et mettre à jour le href de celui du grade
     _TABLEAUX.forEach(id => {
@@ -2087,7 +2100,7 @@ function miseEnConformite(grade) {
     const tableau = document.getElementById(conf.tableau);
     if (tableau) {
         const src = cl && conf.tableauSrcCl ? conf.tableauSrcCl : conf.tableauSrc;
-        if (src) tableau.setAttribute('href', src + '?v=' + _VISUELS_V);
+        if (src) chargerImage(tableau, src + '?v=' + _VISUELS_V);
         tableau.setAttribute('visibility', 'visible');
     }
 
@@ -2196,7 +2209,7 @@ function toggleLogeMode() {
     if (!conf) return;
     const cl = (logeMode === 'classique');
     const tapis = document.getElementById('tapis-loge');
-    if (tapis) tapis.setAttribute('href', (cl && conf.tapisCl ? conf.tapisCl : conf.tapis) + '?v=' + _VISUELS_V);
+    if (tapis) chargerImage(tapis, (cl && conf.tapisCl ? conf.tapisCl : conf.tapis) + '?v=' + _VISUELS_V);
     _TABLEAUX.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.setAttribute('visibility', 'hidden');
@@ -2204,7 +2217,7 @@ function toggleLogeMode() {
     const tableau = document.getElementById(conf.tableau);
     if (tableau) {
         const src = cl && conf.tableauSrcCl ? conf.tableauSrcCl : conf.tableauSrc;
-        if (src) tableau.setAttribute('href', src + '?v=' + _VISUELS_V);
+        if (src) chargerImage(tableau, src + '?v=' + _VISUELS_V);
         tableau.setAttribute('visibility', 'visible');
     }
 }
