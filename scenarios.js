@@ -303,6 +303,8 @@ const Rituel = {
         // Cartouche SVG au-dessus de la loge
         const svg = document.getElementById('svg-etape-courante');
         if (svg) svg.textContent = nom || '';
+        // Sauvegarde pour la reprise après rafraîchissement (refactor/persistence.js)
+        if (typeof RERState !== 'undefined') RERState.majEtape(nom);
     },
 
     // Table nom → ID de pion SVG
@@ -1505,6 +1507,8 @@ const Rituel = {
         ouvrirBible();
 
         this.parler("SYSTEM", "Loge rangée.");
+        // Loge rangée : plus rien à reprendre (refactor/persistence.js)
+        if (typeof RERState !== 'undefined') RERState.effacer();
     },
 
     // ─── ENTRÉES ─────────────────────────────────────────────────────────────
@@ -7629,6 +7633,7 @@ function toggleMusique() {
         RERUI.apply(btn, _musiqueActive ? 'toggle-on' : 'toggle-off', { compact: true });
     }
     if (!_musiqueActive) arreterMusique(true);
+    if (typeof RERState !== 'undefined') RERState.majReglages();
 }
 
 // ─── PAUSE / REPRENDRE ───────────────────────────────────────────────────────
@@ -7657,6 +7662,7 @@ function setTailleBulles(taille) {
         RERUI.apply(b, 'toggle-off', { compact: true });
     });
     RERUI.apply('btn-taille-' + taille, 'primary', { compact: true });
+    if (typeof RERState !== 'undefined') RERState.majReglages();
 }
 window._bulleTailleNom   = '14';
 window._bulleTailleTexte = '16';

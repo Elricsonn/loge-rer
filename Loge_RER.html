@@ -1801,6 +1801,8 @@ function _renderDevProgress() {
 <script src="refactor/ui-kit.js"></script>
 <!-- Refonte : tableaux de rappel du catéchisme en données (remplace _CATE_GRADE) -->
 <script src="refactor/catechismes.data.js"></script>
+<!-- Refonte : sauvegarde et reprise de session après rafraîchissement -->
+<script src="refactor/persistence.js"></script>
 
 <script>
 // ─── AUTHENTIFICATION
@@ -1959,6 +1961,9 @@ function _activerGrade(grade) {
     const imgEls = document.querySelectorAll('.bijou-img');
     svgEls.forEach(el => el.setAttribute('display', 'none'));
     imgEls.forEach(el => el.setAttribute('display', 'inline'));
+    // Reprise de session (refactor/persistence.js) : propose de reprendre la
+    // dernière étape de ce grade si la page a été rafraîchie en cours de séance.
+    if (typeof RERState !== 'undefined') RERState.ouvrirSession(grade);
 }
 
 function chargerGrade(grade) {
@@ -2143,6 +2148,7 @@ function toggleBulles() {
         btn.textContent = '💬 Bulles : ' + (Rituel.BULLES_ACTIVES ? 'ON' : 'OFF');
         RERUI.apply(btn, Rituel.BULLES_ACTIVES ? 'toggle-on' : 'toggle-off', { compact: true });
     }
+    if (typeof RERState !== 'undefined') RERState.majReglages();
 }
 
 let bijouxMode = 'img';
@@ -2166,6 +2172,7 @@ function toggleBijoux() {
             RERUI.apply(btn, 'blue-off', { mb: '4px' });
         }
     }
+    if (typeof RERState !== 'undefined') RERState.majReglages();
 }
 
 // ─── MODE LOGE ────────────────────────────────────────────────────────────────
@@ -2182,6 +2189,7 @@ function toggleLogeMode() {
         btn.textContent = logeMode === 'epique' ? '🏛 Loge : Épique' : '🏛 Loge : Classique';
         RERUI.apply(btn, logeMode === 'epique' ? 'primary' : 'classique', { mb: '4px' });
     }
+    if (typeof RERState !== 'undefined') RERState.majReglages();
     // Appliquer immédiatement au tapis et tableau courants
     const grade = window._gradeEnLoge || window._gradeConnecte || 'apprenti';
     const conf = _CONFORMITE[grade];
@@ -2258,6 +2266,7 @@ function toggleDebug() {
         const el = document.getElementById(id);
         if (el) el.setAttribute('visibility', Rituel.DEBUG_MODE ? 'visible' : 'hidden');
     });
+    if (typeof RERState !== 'undefined') RERState.majReglages();
 }
 
 function _toggleWaypoints(visible) {
