@@ -4354,11 +4354,11 @@ receptionVoyages: async function() {
 
         await this.pause(D * 5 + DECAL * (apprentis.length + 1));
 
-        // Les apprentis se rangent dans la réserve
-        const reserveY = [920, 920, 920, 980];
-        const reserveX = [1220, 1270, 1320, 1220];
+        // Les apprentis se rangent dans la réserve — places de REMISE
+        // (5 places : appr5 est le nouvel Apprenti issu de la réception)
         for (let i = 0; i < apprentis.length; i++) {
-            animerVers(apprentis[i], reserveX[i], reserveY[i], 800);
+            const place = this.REMISE[apprentis[i]];
+            if (place) animerVers(apprentis[i], place.x, place.y, 800);
         }
 
         // MdC revient à sa place
