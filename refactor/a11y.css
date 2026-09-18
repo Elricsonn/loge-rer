@@ -27,7 +27,7 @@
 
 /* ── Contraste : titres de section de la régie (#555 sur #1a1a1a = 2,3:1).
       Or adouci, dans le ton de la régie (≈ 6:1). ──────────────────────────── */
-#menu-regie p { color: #b8935a !important; }
+#menu-regie p { color: var(--or-lisible, #b8935a) !important; }
 
 /* ── Respect de « réduire les animations » (animations CSS, panneaux) ─────── */
 @media (prefers-reduced-motion: reduce) {

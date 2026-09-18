@@ -36,6 +36,7 @@
   /* ── Texte propre à la régie ────────────────────────────────────────── */
   --texte-attenue: #8a8272;   /* boutons OFF, notes — 4,6:1 (était #666, 3,0:1) */
   --texte-faible:  #7a7365;   /* mentions discrètes — 3,9:1 (était #555, 2,3:1) */
+  --or-lisible:    #b8935a;   /* libellés dorés en petit texte — remplace #8b6914 (3,9:1) */
 
   /* ── Police de catéchisme ───────────────────────────────────────────── */
   --font-cate: Georgia, serif;   /* valeurs de catéchisme, plus étroit que Crimson */

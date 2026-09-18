@@ -35,7 +35,7 @@
     text-shadow: 0 0 20px rgba(212,168,75,0.4);
   }
   #login-screen .subtitle {
-    color: var(--or-fonce); font-family: 'Cinzel', serif; font-size: 0.85em;
+    color: var(--or-lisible);   /* contraste relevé : était --or-fonce (#8b6914) */ font-family: 'Cinzel', serif; font-size: 0.85em;
     letter-spacing: 3px; text-align: center;
   }
   #login-screen .separateur {
@@ -54,24 +54,30 @@
     background: var(--bg-champ); color: var(--or);
     border: 1px solid var(--or-ombre); border-radius: 4px;
     font-family: 'Cinzel', serif; font-size: 0.9em;
-    cursor: pointer; outline: none;
+    cursor: pointer; min-height: 44px;   /* cible tactile recommandée */
   }
   #login-form input[type=password] {
     width: 100%; padding: 10px 12px;
     background: var(--bg-champ-noir); color: #f0e8d0;
     border: 1px solid var(--or-ombre); border-radius: 4px;
     font-family: 'Crimson Text', serif; font-size: 1em;
-    outline: none; letter-spacing: 3px;
+    letter-spacing: 3px; min-height: 44px;
   }
+  #login-form input[type=password]::placeholder { color: var(--texte-attenue); letter-spacing: 1px; }
   #login-form input[type=password]:focus { border-color: var(--or-fonce); }
   #login-form button {
     width: 100%; padding: 11px;
     background: #2a1800; color: var(--or);
     border: 1px solid var(--or-fonce); border-radius: 4px;
     font-family: 'Cinzel', serif; font-size: 0.9em;
-    cursor: pointer; letter-spacing: 2px;
+    cursor: pointer; letter-spacing: 2px; min-height: 44px;
     transition: background 0.2s;
   }
+  /* Focus clavier visible sur les champs et le bouton de connexion */
+  #login-form select:focus-visible,
+  #login-form input:focus-visible,
+  #login-form button:focus-visible,
+  #login-screen .btn-guide:focus-visible { outline: 2px solid var(--or); outline-offset: 2px; }
   #login-form button:hover { background: #3a2400; }
   #login-error {
     color: var(--rouge); font-size: 0.85em; text-align: center;
@@ -79,7 +85,7 @@
   }
   .etoile-login { color: var(--or); font-size: 1.4em; opacity: 0.6; }
   .btn-guide {
-    color: var(--or-fonce); font-family: 'Cinzel', serif; font-size: 0.8em;
+    color: var(--or-lisible);   /* contraste relevé : était --or-fonce */ font-family: 'Cinzel', serif; font-size: 0.8em;
     letter-spacing: 2px; text-decoration: none;
     border: 1px solid var(--or-ombre); border-radius: 4px;
     padding: 7px 18px; transition: all 0.2s;
@@ -500,11 +506,12 @@ function _renderDevProgress() {
 <!-- ÉCRAN DE LOGIN -->
 <div id="login-screen">
   <div id="dev-progress"></div>
-  <div class="etoile-login">✦ ✦ ✦</div>
+  <div class="etoile-login" aria-hidden="true">✦ ✦ ✦</div>
   <h1>RITUEL R∴E∴R∴</h1>
   <div class="subtitle">Rite Écossais Rectifié</div>
-  <div class="separateur"></div>
-  <div id="login-form">
+  <div class="separateur" aria-hidden="true"></div>
+  <div id="login-form" role="group" aria-label="Connexion">
+    <label for="login-grade" class="sr-only">Grade</label>
     <select id="login-grade">
       <option value="">— Sélectionner votre grade —</option>
       <option value="apprenti">Loge d'Apprenti</option>
@@ -512,13 +519,14 @@ function _renderDevProgress() {
       <option value="maitre">Loge de Maître</option>
       <option value="me">Loge de Maître Écossais de Saint-André</option>
     </select>
-    <input type="password" id="login-mdp" placeholder="Mot de passe"/>
-    <button onclick="tenterLogin()">Entrer en Loge</button>
-    <div id="login-error"></div>
+    <label for="login-mdp" class="sr-only">Mot de passe</label>
+    <input type="password" id="login-mdp" placeholder="Mot de passe" autocomplete="current-password"/>
+    <button type="button" onclick="tenterLogin()">Entrer en Loge</button>
+    <div id="login-error" role="alert" aria-live="polite"></div>
   </div>
-  <div class="separateur"></div>
-  <div class="etoile-login">✦</div>
-  <a href="guide_utilisateur.html" target="_blank" class="btn-guide">Guide de l'utilisateur</a>
+  <div class="separateur" aria-hidden="true"></div>
+  <div class="etoile-login" aria-hidden="true">✦</div>
+  <a href="guide_utilisateur.html" target="_blank" rel="noopener" class="btn-guide">Guide de l'utilisateur</a>
   <div style="margin-top:28px; color:#d4a84b; font-family:'Cinzel', serif; font-size:1.1em; letter-spacing:3px; text-shadow:0 0 12px rgba(212,168,75,0.3);">© Elricsonn</div>
 </div>
 
