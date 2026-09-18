@@ -94,17 +94,18 @@ function afficherCatechisme(grade) {
 function genererMenu() {
     const grade = window._gradeConnecte || 'apprenti';
     const _fin = `.then(()=>Rituel._setEtape('En attente')).catch(()=>{})`;
-    const B  = (label, fn) => `<button onclick="${fn}${_fin}" style="padding:7px; background:#2a2000; color:gold; border:1px solid #8b6914; cursor:pointer; border-radius:4px; font-size:0.82em; width:100%;">${label}</button>`;
-    const BR = (label, fn) => `<button onclick="${fn}${_fin}" style="padding:7px; background:#2a1a00; color:#d4a84b; border:1px solid #8b6914; cursor:pointer; border-radius:4px; font-size:0.82em; width:100%;">${label}</button>`;
+    // Styles de boutons : refactor/ui-kit.js (RERUI)
+    const B  = (label, fn) => `<button onclick="${fn}${_fin}" style="${RERUI.btn('primary')}">${label}</button>`;
+    const BR = (label, fn) => `<button onclick="${fn}${_fin}" style="${RERUI.btn('secondary')}">${label}</button>`;
     const PS = (label)     => `<p style="color:#555; font-size:0.78em; margin:12px 0 5px 0; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">${label}</p>`;
     const G1 = (inner)     => `<div style="display:grid; grid-template-columns:1fr; gap:4px;">${inner}</div>`;
     const G2 = (inner)     => `<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:4px;">${inner}</div>`;
     const G3 = (inner)     => `<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:4px;">${inner}</div>`;
-    const PRETE = `<button onclick="Rituel.logePreteOuverture().then(()=>Rituel._setEtape('En attente')).catch(()=>{})" style="padding:7px; background:#1a2a1a; color:#88cc88; border:1px solid #4a8a4a; cursor:pointer; border-radius:4px; font-size:0.82em; width:100%;">⚡ Loge prête</button>`;
+    const PRETE = `<button onclick="Rituel.logePreteOuverture().then(()=>Rituel._setEtape('En attente')).catch(()=>{})" style="${RERUI.btn('success')}">⚡ Loge prête</button>`;
 
     const sec = (id, label, inner) => `
         <div style="margin-bottom:4px;">
-          <button onclick="toggleSection('${id}')" style="width:100%; padding:9px 12px; cursor:pointer; border-radius:4px; font-size:0.88em; font-family:Cinzel,serif; font-weight:bold; background:#1a1200; color:#d4a84b; border:1px solid #8b6914; text-align:left; display:flex; justify-content:space-between; align-items:center;"><span>${label}</span><span id="${id}-arrow" style="font-size:0.8em;">▶</span></button>
+          <button onclick="toggleSection('${id}')" style="${RERUI.btn('section', { pad: '9px 12px', size: '0.88em', extra: 'font-family:Cinzel,serif; font-weight:bold; text-align:left; display:flex; justify-content:space-between; align-items:center;' })}"><span>${label}</span><span id="${id}-arrow" style="font-size:0.8em;">▶</span></button>
           <div id="${id}" style="display:none; padding:6px 0 2px 0;">${inner}</div>
         </div>`;
 
@@ -217,31 +218,33 @@ function genererMenu() {
         BR("Investiture",              "Rituel.receptionMEInvestiture()")
     );
 
+    const CPT = { compact: true };   // boutons des grilles 2-3 colonnes
+    const MB4 = { mb: '4px' };       // boutons pleine largeur du bloc Système
     const SYSTEME = `
         ${PS('⚙ Système')}
         <div id="etape-courante" style="width:100%; margin-bottom:6px; padding:5px 8px; background:#0d1a0d; color:#7abf7a; border:1px solid #2a4a2a; border-radius:4px; font-size:0.75em; min-height:1.5em; font-style:italic;"></div>
         ${G2(
-            '<button id="btn-pause" onclick="togglePause()" style="padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a0d; color:#cccc88; border:1px solid #666633;">⏸ Pause</button>' +
-            '<button onclick="if(confirm(\'Ranger la loge ? La cérémonie en cours sera perdue.\')) Rituel.resetTout()" style="padding:6px 2px; background:#4a0000; color:#ffcccc; border:1px solid #900; cursor:pointer; border-radius:4px; font-size:0.75em;">⚑ Ranger</button>'
+            '<button id="btn-pause" onclick="togglePause()" style="' + RERUI.btn('pause', CPT) + '">⏸ Pause</button>' +
+            '<button onclick="if(confirm(\'Ranger la loge ? La cérémonie en cours sera perdue.\')) Rituel.resetTout()" style="' + RERUI.btn('danger', CPT) + '">⚑ Ranger</button>'
         )}
-        <button id="btn-bijoux-regie" onclick="toggleBijoux()" style="width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a2000; color:gold; border:1px solid #8b6914;">✦ Bijoux : ON</button>
-        <button id="btn-loge-mode" onclick="toggleLogeMode()" style="width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a2000; color:gold; border:1px solid #8b6914;">🏛 Loge : Épique</button>
+        <button id="btn-bijoux-regie" onclick="toggleBijoux()" style="${RERUI.btn('primary', MB4)}">✦ Bijoux : ON</button>
+        <button id="btn-loge-mode" onclick="toggleLogeMode()" style="${RERUI.btn('primary', MB4)}">🏛 Loge : Épique</button>
         ${G2(
-            '<button id="btn-bulles"  onclick="toggleBulles()"  style="padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#0d2a0d; color:#a0d4a0; border:1px solid #4a8a4a;">💬 Bulles : ON</button>' +
-            '<button id="btn-musique" onclick="toggleMusique()" style="padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#0d2a0d; color:#a0d4a0; border:1px solid #4a8a4a;">🎵 Musique : ON</button>'
+            '<button id="btn-bulles"  onclick="toggleBulles()"  style="' + RERUI.btn('toggle-on', CPT) + '">💬 Bulles : ON</button>' +
+            '<button id="btn-musique" onclick="toggleMusique()" style="' + RERUI.btn('toggle-on', CPT) + '">🎵 Musique : ON</button>'
         )}
         ${G2(
-            '<button id="btn-debug" onclick="toggleDebug()" style="padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a1a; color:#666; border:1px solid #444;">🐛 Debug : OFF</button>' +
-            '<button onclick="afficherPositions()" style="padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a2a; color:#8888cc; border:1px solid #4a4a8a;">📍 Positions</button>'
+            '<button id="btn-debug" onclick="toggleDebug()" style="' + RERUI.btn('toggle-off', CPT) + '">🐛 Debug : OFF</button>' +
+            '<button onclick="afficherPositions()" style="' + RERUI.btn('positions', CPT) + '">📍 Positions</button>'
         )}
         ${PS('🔤 Taille bulles')}
         ${G3(
-            '<button id="btn-taille-petit"  onclick="setTailleBulles(\'petit\')"  style="padding:6px 2px; background:#1a1a1a; color:#666; border:1px solid #444; cursor:pointer; border-radius:4px; font-size:0.75em;">Petit</button>' +
-            '<button id="btn-taille-moyen"  onclick="setTailleBulles(\'moyen\')"  style="padding:6px 2px; background:#2a2000; color:gold; border:1px solid #8b6914; cursor:pointer; border-radius:4px; font-size:0.75em;">Moyen</button>' +
-            '<button id="btn-taille-grand"  onclick="setTailleBulles(\'grand\')"  style="padding:6px 2px; background:#1a1a1a; color:#666; border:1px solid #444; cursor:pointer; border-radius:4px; font-size:0.75em;">Grand</button>'
+            '<button id="btn-taille-petit"  onclick="setTailleBulles(\'petit\')"  style="' + RERUI.btn('toggle-off', CPT) + '">Petit</button>' +
+            '<button id="btn-taille-moyen"  onclick="setTailleBulles(\'moyen\')"  style="' + RERUI.btn('primary', CPT) + '">Moyen</button>' +
+            '<button id="btn-taille-grand"  onclick="setTailleBulles(\'grand\')"  style="' + RERUI.btn('toggle-off', CPT) + '">Grand</button>'
         )}
-        <button id="btn-catechisme" onclick="toggleCatechisme()" style="width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#1a1a1a; color:#666; border:1px solid #444;">📖 Catéchisme : OFF</button>
-        <button onclick="ouvrirQuiz()" style="width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#0d1a2a; color:#6ab4e8; border:1px solid #2a5a8a;">🎲 Quiz du Catéchisme</button>`;
+        <button id="btn-catechisme" onclick="toggleCatechisme()" style="${RERUI.btn('toggle-off', MB4)}">📖 Catéchisme : OFF</button>
+        <button onclick="ouvrirQuiz()" style="${RERUI.btn('info', MB4)}">🎲 Quiz du Catéchisme</button>`;
 
     // Sections selon le grade
     let sections = '';
@@ -7626,9 +7629,7 @@ function toggleMusique() {
     const btn = document.getElementById('btn-musique');
     if (btn) {
         btn.textContent = '🎵 Musique : ' + (_musiqueActive ? 'ON' : 'OFF');
-        btn.style.cssText = _musiqueActive
-            ? 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#0d2a0d; color:#a0d4a0; border:1px solid #4a8a4a;'
-            : 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a1a; color:#666; border:1px solid #444;';
+        RERUI.apply(btn, _musiqueActive ? 'toggle-on' : 'toggle-off', { compact: true });
     }
     if (!_musiqueActive) arreterMusique(true);
 }
@@ -7640,10 +7641,10 @@ function togglePause() {
     if (btn) {
         if (Rituel._paused) {
             btn.textContent = '▶ Reprendre';
-            btn.style.cssText = 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#2a1a00; color:#ffaa44; border:1px solid #cc7700;';
+            RERUI.apply(btn, 'reprendre', { compact: true });
         } else {
             btn.textContent = '⏸ Pause';
-            btn.style.cssText = 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a0d; color:#cccc88; border:1px solid #666633;';
+            RERUI.apply(btn, 'pause', { compact: true });
         }
     }
 }
@@ -7656,10 +7657,9 @@ function setTailleBulles(taille) {
     window._bulleTailleTexte = texte;
     ['btn-taille-petit','btn-taille-moyen','btn-taille-grand'].forEach(id => {
         const b = document.getElementById(id);
-        if (b) { b.style.background = '#1a1a1a'; b.style.color = '#666'; b.style.borderColor = '#444'; }
+        RERUI.apply(b, 'toggle-off', { compact: true });
     });
-    const btn = document.getElementById('btn-taille-' + taille);
-    if (btn) { btn.style.background = '#2a2000'; btn.style.color = 'gold'; btn.style.borderColor = '#8b6914'; }
+    RERUI.apply('btn-taille-' + taille, 'primary', { compact: true });
 }
 window._bulleTailleNom   = '14';
 window._bulleTailleTexte = '16';

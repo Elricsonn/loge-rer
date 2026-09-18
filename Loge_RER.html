@@ -1828,6 +1828,8 @@ function _renderDevProgress() {
 </div>
 
 <script src="moteur.js"></script>
+<!-- Refonte : styles de boutons factorisés (avant scenarios.js, injecté plus bas) -->
+<script src="refactor/ui-kit.js"></script>
 
 <script>
 // ─── AUTHENTIFICATION
@@ -2034,9 +2036,7 @@ function toggleCatechisme() {
     p.style.display = visible ? 'none' : 'block';
     if (btn) {
         btn.textContent = visible ? '📖 Catéchisme : OFF' : '📖 Catéchisme : ON';
-        btn.style.cssText = visible
-            ? 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#1a1a1a; color:#666; border:1px solid #444;'
-            : 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a1800; color:#d4a84b; border:1px solid #8b6914;';
+        RERUI.apply(btn, visible ? 'toggle-off' : 'cate-on', { mb: '4px' });
     }
     _updateToggleRegiePos();
 }
@@ -2170,9 +2170,7 @@ function toggleBulles() {
     const btn = document.getElementById('btn-bulles');
     if (btn) {
         btn.textContent = '💬 Bulles : ' + (Rituel.BULLES_ACTIVES ? 'ON' : 'OFF');
-        btn.style.cssText = Rituel.BULLES_ACTIVES
-            ? 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#0d2a0d; color:#a0d4a0; border:1px solid #4a8a4a;'
-            : 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a1a; color:#666; border:1px solid #444;';
+        RERUI.apply(btn, Rituel.BULLES_ACTIVES ? 'toggle-on' : 'toggle-off', { compact: true });
     }
 }
 
@@ -2187,14 +2185,14 @@ function toggleBijoux() {
         imgEls.forEach(el => el.setAttribute('display', 'inline'));
         if (btn) {
             btn.textContent = '✦ Bijoux : ON';
-            btn.style.cssText = 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a2000; color:gold; border:1px solid #8b6914;';
+            RERUI.apply(btn, 'primary', { mb: '4px' });
         }
     } else {
         svgEls.forEach(el => el.setAttribute('display', 'inline'));
         imgEls.forEach(el => el.setAttribute('display', 'none'));
         if (btn) {
             btn.textContent = '✦ Bijoux : OFF';
-            btn.style.cssText = 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#0d1e2a; color:#66b3ff; border:1px solid #3a6a99;';
+            RERUI.apply(btn, 'blue-off', { mb: '4px' });
         }
     }
 }
@@ -2211,9 +2209,7 @@ function toggleLogeMode() {
     const btn = document.getElementById('btn-loge-mode');
     if (btn) {
         btn.textContent = logeMode === 'epique' ? '🏛 Loge : Épique' : '🏛 Loge : Classique';
-        btn.style.cssText = logeMode === 'epique'
-            ? 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#2a2000; color:gold; border:1px solid #8b6914;'
-            : 'width:100%; padding:7px; cursor:pointer; border-radius:4px; font-size:0.82em; margin-bottom:4px; background:#1a1200; color:#a08030; border:1px solid #6b5010;';
+        RERUI.apply(btn, logeMode === 'epique' ? 'primary' : 'classique', { mb: '4px' });
     }
     // Appliquer immédiatement au tapis et tableau courants
     const grade = window._gradeEnLoge || window._gradeConnecte || 'apprenti';
@@ -2274,9 +2270,7 @@ function toggleDebug() {
     const btn = document.getElementById('btn-debug');
     if (btn) {
         btn.textContent = '🐛 Debug : ' + (Rituel.DEBUG_MODE ? 'ON' : 'OFF');
-        btn.style.cssText = Rituel.DEBUG_MODE
-            ? 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#0d2a0d; color:#a0d4a0; border:1px solid #4a8a4a;'
-            : 'padding:6px 2px; cursor:pointer; border-radius:4px; font-size:0.75em; background:#1a1a1a; color:#666; border:1px solid #444;';
+        RERUI.apply(btn, Rituel.DEBUG_MODE ? 'toggle-on' : 'toggle-off', { compact: true });
     }
     _toggleWaypoints(Rituel.DEBUG_MODE);
     if (Rituel.DEBUG_MODE) {
