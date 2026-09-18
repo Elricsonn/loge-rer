@@ -1,0 +1,65 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THÈME R∴E∴R∴ — jetons de l'application
+   ───────────────────────────────────────────────────────────────────────────
+   Depuis la mise en place du kit ésotérique, ce fichier ne redéfinit plus la
+   palette : il CHARGE celle du kit (`ds/jetons.css`, commune aux cinq sites)
+   et n'ajoute que ce qui est propre au plateau — fonds de panneaux, couleurs
+   de grades, ombres de régie.
+
+   Intégration : <link rel="stylesheet" href="ds/jetons.css"> puis
+   <link rel="stylesheet" href="refactor/theme.css">, AVANT le <style> de
+   Loge_RER.html. Les helpers JS (ui-kit.js) lisent ces mêmes jetons.
+
+   Les anciens noms (--bg-nuit, --texte-label…) restent définis en bas, en
+   alias, pour ne rien casser dans l'existant. À retirer une fois les valeurs
+   littérales du <style> migrées.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Propre au plateau ──────────────────────────────────────────────── */
+  --bg-plateau:    #111111;   /* fond du SVG et du panneau de flux */
+  --bg-regie:      #1a1a1a;   /* colonne de régie, à gauche */
+  --bg-entete:     #222222;   /* barres de titre des panneaux */
+  --bg-cate:       #12100a;   /* panneau catéchisme */
+  --bg-champ:      #1a1200;   /* selects, boutons dorés sombres */
+  --bg-champ-noir: #0f0b00;   /* champs de mot de passe */
+  --bg-ligne-a:    #120f00;   /* lignes de tableau paires */
+  --bg-ligne-b:    #1a1400;   /* lignes de tableau impaires */
+
+  /* ── États et grades ────────────────────────────────────────────────── */
+  --vert-fonce:  #2a6e3f;   --vert-doux:  #a0d4a0;
+  --rouge-vif:   #b83030;                             /* erreurs bloquantes */
+  --bleu:        #66b3ff;   --bleu-cordon: #4682B4;   /* pions, cordons */
+  --bleu-info:   #6ab4e8;                             /* quiz */
+  --vert-me:     #2d7a2d;   --rouge-me:    #cc2200;   /* Maître Écossais */
+
+  /* ── Texte propre à la régie ────────────────────────────────────────── */
+  --texte-attenue: #8a8272;   /* boutons OFF, notes — 4,6:1 (était #666, 3,0:1) */
+  --texte-faible:  #7a7365;   /* mentions discrètes — 3,9:1 (était #555, 2,3:1) */
+
+  /* ── Police de catéchisme ───────────────────────────────────────────── */
+  --font-cate: Georgia, serif;   /* valeurs de catéchisme, plus étroit que Crimson */
+
+  /* ── Ombres et transitions de panneaux ──────────────────────────────── */
+  --ombre-panneau: 5px 0 15px rgba(0, 0, 0, 0.5);
+  --lueur-or:      0 0 20px rgba(212, 168, 75, 0.4);
+  --t-panneau:     0.28s ease;
+  --t-ui:          0.15s ease;
+
+  /* ── Alias de compatibilité (anciens noms) ──────────────────────────── */
+  --bg-nuit:        var(--fond);
+  --bg-noir:        var(--bg-plateau);
+  --bg-panneau:     var(--bg-regie);
+  --texte-doux:     var(--texte);        /* le flux de dialogue lit en pleine valeur */
+  --texte-label:    var(--texte-meta);   /* était #8b6914, 3,9:1 — trop sombre */
+  --or-vif:         var(--or-clair);
+  --rouge-clair:    var(--rouge);
+  --lueur-or-douce: var(--lueur);
+}
+
+/* Confort de lecture : le body hérite de la police corps + fond nuit. */
+body.rer-themed {
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--font-corps);
+}
