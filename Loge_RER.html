@@ -6,6 +6,8 @@
 <!-- Jetons de couleur : palette commune du kit (ds/) puis jetons propres au plateau -->
 <link rel="stylesheet" href="ds/jetons.css">
 <link rel="stylesheet" href="refactor/theme.css">
+<!-- Accessibilité : focus clavier, cibles, contraste, animations réduites -->
+<link rel="stylesheet" href="refactor/a11y.css">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -449,7 +451,7 @@ function _renderDevProgress() {
     ticks += '<div class="dp-tick ' + cls + '" style="bottom:' + p + '%"></div>';
   }
   // Onglet d'appel (toujours visible)
-  let html = '<div class="dp-tab">';
+  let html = '<div class="dp-tab" role="button" tabindex="0" aria-expanded="false" aria-label="Avancement du développement">';
   html += '<div class="dp-tab-pct">' + Math.round(pctDone) + '%</div>';
   html += '<div class="dp-tab-arrow">&#9654;</div>';
   html += '</div>';
@@ -522,7 +524,7 @@ function _renderDevProgress() {
 
 <!-- PLATEAU SVG -->
 <div id="conteneur-plateau">
-  <svg viewBox="0 -40 1400 1340" width="1400" height="1300" xmlns="http://www.w3.org/2000/svg" id="loge-svg">
+  <svg viewBox="0 -40 1400 1340" width="1400" height="1300" xmlns="http://www.w3.org/2000/svg" id="loge-svg" role="img" aria-label="Plateau de la Loge">
 
 <defs>
       <!-- BOIS ANCIEN : gradient de base warm -->
@@ -1756,7 +1758,7 @@ function _renderDevProgress() {
 </div>
 
 <!-- PANNEAU GAUCHE : régie (rempli dynamiquement) -->
-<div id="regie-panel" style="position:fixed; top:0; left:0; width:270px; height:100%; background:#1a1a1a; border-right:3px solid gold; overflow-y:auto; box-shadow:5px 0 15px rgba(0,0,0,0.5); z-index:9999; display:none;">
+<div id="regie-panel" role="region" aria-label="Régie" style="position:fixed; top:0; left:0; width:270px; height:100%; background:#1a1a1a; border-right:3px solid gold; overflow-y:auto; box-shadow:5px 0 15px rgba(0,0,0,0.5); z-index:9999; display:none;">
     <div style="padding:14px; background:#222; border-bottom:1px solid gold; text-align:center; position:sticky; top:0; z-index:1;">
         <h3 id="regie-titre" style="color:gold; margin:0; font-family:serif; letter-spacing:2px; font-size:1em;">🏛️ RITUEL R.E.R.</h3>
     </div>
@@ -1764,7 +1766,7 @@ function _renderDevProgress() {
 </div>
 
 <!-- PANNEAU CATÉCHISME : entre régie et loge -->
-<div id="panneau-catechisme" style="position:fixed; top:0; left:270px; width:425px; height:100%; background:#12100a; border-right:2px solid #3a2a0a; overflow-y:auto; z-index:9998; display:none;">
+<div id="panneau-catechisme" role="region" aria-label="Catéchisme" style="position:fixed; top:0; left:270px; width:425px; height:100%; background:#12100a; border-right:2px solid #3a2a0a; overflow-y:auto; z-index:9998; display:none;">
     <div style="padding:10px 12px; background:#1a1400; border-bottom:1px solid #3a2a0a; text-align:center; position:sticky; top:0;">
         <span style="color:#d4a84b; font-family:'Cinzel',serif; font-size:0.8em; letter-spacing:2px;">📖 CATÉCHISME</span>
     </div>
@@ -1772,7 +1774,7 @@ function _renderDevProgress() {
 </div>
 
 <!-- PANNEAU DROIT : flux de dialogue -->
-<div id="panneau-dialogue" style="position:fixed; top:0; right:0; width:540px; height:100%; background:#111; border-left:2px solid #3a2a0a; display:flex; flex-direction:column; z-index:9999; display:none;">
+<div id="panneau-dialogue" role="region" aria-label="Flux des travaux" style="position:fixed; top:0; right:0; width:540px; height:100%; background:#111; border-left:2px solid #3a2a0a; display:flex; flex-direction:column; z-index:9999; display:none;">
     <div style="padding:10px 14px; background:#1a1400; border-bottom:1px solid #3a2a0a; text-align:center; position:sticky; top:0;">
         <span style="color:#d4a84b; font-family:serif; font-size:0.9em; letter-spacing:1px;">FLUX DES TRAVAUX</span>
     </div>
@@ -1785,7 +1787,7 @@ function _renderDevProgress() {
 </div>
 
 <!-- ── Bouton toggle Régie (gauche) ── -->
-<button id="btn-toggle-regie" onclick="toggleRegie()" title="Replier / déplier la régie">◀</button>
+<button id="btn-toggle-regie" onclick="toggleRegie()" title="Replier / déplier la régie" aria-label="Replier / déplier la régie">◀</button>
 
 <!-- ── Bord flux : poignée resize + bouton toggle (droite) ── -->
 <div id="flux-bord">
@@ -1793,7 +1795,8 @@ function _renderDevProgress() {
   <button id="btn-toggle-flux"
           onclick="toggleFlux()"
           onmousedown="event.stopPropagation()"
-          title="Replier / déplier le flux">▶</button>
+          title="Replier / déplier le flux"
+          aria-label="Replier / déplier le flux">▶</button>
 </div>
 
 <script src="moteur.js"></script>
@@ -1904,11 +1907,19 @@ document.addEventListener('DOMContentLoaded', () => {
     _renderDevProgress();
     const dp = document.getElementById('dev-progress');
     const dpTab = dp && dp.querySelector('.dp-tab');
-    if (dpTab) dpTab.addEventListener('click', () => {
+    const basculerDp = () => {
         const open = dp.classList.contains('show-thermo');
         dp.classList.toggle('show-thermo', !open);
         dp.classList.toggle('show-detail', !open);
-    });
+        dpTab.setAttribute('aria-expanded', String(!open));
+    };
+    if (dpTab) {
+        dpTab.addEventListener('click', basculerDp);
+        // Accessible au clavier : Entrée ou Espace
+        dpTab.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); basculerDp(); }
+        });
+    }
 });
 
 // ─── RACCOURCIS CLAVIER ───────────────────────────────────────────────────────
@@ -2526,8 +2537,8 @@ function toggleFlux() {
 
 <!-- OVERLAY QUIZ -->
 <div id="quiz-overlay">
-  <button class="quiz-close" onclick="fermerQuiz()" title="Fermer le quiz">✕</button>
-  <iframe id="quiz-iframe" src="" allow="autoplay"></iframe>
+  <button class="quiz-close" onclick="fermerQuiz()" title="Fermer le quiz" aria-label="Fermer le quiz">✕</button>
+  <iframe id="quiz-iframe" src="" allow="autoplay" title="Quiz du catéchisme"></iframe>
 </div>
 
 <script>

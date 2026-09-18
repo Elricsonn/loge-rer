@@ -1,0 +1,46 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ R∴E∴R∴ — a11y.css
+   ───────────────────────────────────────────────────────────────────────────
+   Améliore l'usage pour des Frères parfois âgés ou au clavier, sans changer
+   l'esthétique. Chargé APRÈS refactor/theme.css et AVANT le <style> de
+   Loge_RER.html.
+
+   Loge_RER.html ne charge pas ds/base.css : les règles de focus et de
+   « réduire les animations » de base.css ne s'appliquent donc pas ici, elles
+   sont reprises ci-dessous pour le plateau (pas de double application).
+
+   Balisage associé (dans Loge_RER.html) :
+     • <svg role="img" aria-label="Plateau de la Loge">
+     • boutons icône seule → title="…" ET aria-label="…"
+     • panneaux → role="region" aria-label="Régie" / "Catéchisme" / "Flux des travaux"
+     • champs de connexion → <label class="sr-only"> associés
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Focus clavier visible (la souris ne le déclenche pas) ───────────────── */
+:where(button, select, input, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--or-vif, gold);
+  outline-offset: 2px;
+}
+
+/* ── Cibles : hauteur minimale des boutons de régie ───────────────────────── */
+#menu-regie button { min-height: 34px; }
+
+/* ── Contraste : titres de section de la régie (#555 sur #1a1a1a = 2,3:1).
+      Or adouci, dans le ton de la régie (≈ 6:1). ──────────────────────────── */
+#menu-regie p { color: #b8935a !important; }
+
+/* ── Respect de « réduire les animations » (animations CSS, panneaux) ─────── */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+  #panneau-dialogue, #regie-panel, #panneau-catechisme, #btn-toggle-regie, #flux-bord { transition: none !important; }
+}
+
+/* ── Utilitaire lecteur d'écran (libellés invisibles à l'œil) ─────────────── */
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* ── Zone plateau : défilement doux au clavier ────────────────────────────── */
+#conteneur-plateau { scroll-behavior: smooth; }
