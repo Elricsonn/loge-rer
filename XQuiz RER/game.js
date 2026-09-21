@@ -6,10 +6,9 @@
 //  Marches 3-4 : Compagnon
 //  Marche 5    : passage Maître
 //  Marches 5-6 : Maître
-//  Marche 7    : Section secrète (3 questions du grade max)
-//               Q1 = QCM avec timer
-//               Q2 = Texte à trou
-//               Q3 = Question ouverte + auto-évaluation
+//  Marche 7    : Section secrète (3 QCM du grade max, le 1er chronométré)
+//               Aucune réponse à taper : la correction d'un texte libre
+//               était trop aléatoire (décision du 2026-09-21).
 //
 //  Le grade des questions est plafonné au grade de connexion.
 //  Ex : un Apprenti monte les 7 marches mais toutes les
@@ -142,13 +141,6 @@
     var cardBack = document.getElementById('card-back');
     var feedbackSlot = document.getElementById('feedback-slot');
     var cardTimer = document.getElementById('card-timer');
-    var cardInputZone = document.getElementById('card-input-zone');
-    var inputAnswer = document.getElementById('input-answer');
-    var btnValidate = document.getElementById('btn-validate');
-    var cardSelfEval = document.getElementById('card-self-eval');
-    var selfEvalReveal = document.getElementById('self-eval-reveal');
-    var btnEvalYes = document.getElementById('btn-eval-yes');
-    var btnEvalNo = document.getElementById('btn-eval-no');
     var secretOverlay = document.getElementById('secret-overlay');
     var secretSymbol = document.getElementById('secret-symbol');
     var secretText = document.getElementById('secret-text');
@@ -476,14 +468,6 @@
         feedbackSlot.innerHTML = '';
         stopTimer();
         cardAnswers.style.display = '';
-        cardInputZone.style.display = 'none';
-        cardSelfEval.style.display = 'none';
-        inputAnswer.value = '';
-        inputAnswer.disabled = false;
-        btnValidate.disabled = false;
-        // Nettoyer les éventuels éléments de révélation ajoutés dynamiquement
-        var oldReveals = cardInputZone.querySelectorAll('.fill-reveal');
-        oldReveals.forEach(function(el) { el.remove(); });
         if (cardInstruction) cardInstruction.textContent = 'Tirez une carte';
 
         if (reviewMode) {
@@ -496,20 +480,10 @@
             cardCategory.textContent = 'Révision';
             setupQCM();
         } else if (inSecretSection) {
+            // Trois QCM ; le chronomètre ne court que sur la 1re épreuve
             currentQuestion = secretQuestions[secretIndex];
-            if (secretIndex === 0) {
-                // Q1 : QCM avec timer
-                cardCategory.textContent = 'Section Secrète — Épreuve 1/3';
-                setupQCM();
-            } else if (secretIndex === 1) {
-                // Q2 : Texte à trou
-                cardCategory.textContent = 'Section Secrète — Épreuve 2/3';
-                setupFillBlank();
-            } else {
-                // Q3 : Question ouverte + auto-évaluation
-                cardCategory.textContent = 'Section Secrète — Épreuve 3/3';
-                setupOpenQuestion();
-            }
+            cardCategory.textContent = 'Section Secrète — Épreuve ' + (secretIndex + 1) + '/3';
+            setupQCM();
         } else {
             var grade = getGradeForStep(currentStep);
             if (questionPool.length === 0) {
@@ -526,8 +500,6 @@
         cardQuestion.textContent = currentQuestion.question;
         cardAnswers.innerHTML = '';
         cardAnswers.style.display = '';
-        cardInputZone.style.display = 'none';
-        cardSelfEval.style.display = 'none';
 
         var correctAnswer = currentQuestion.answers[currentQuestion.correct];
         var shuffledAnswers = shuffleArray([].concat(currentQuestion.answers));
@@ -547,32 +519,6 @@
         });
     }
 
-    // --- Type texte à trou (Q2 secrète) ---
-    function setupFillBlank() {
-        var correctAnswer = currentQuestion.answers[currentQuestion.correct];
-        // Afficher la question avec un blanc à la place de la réponse
-        cardQuestion.textContent = currentQuestion.question;
-        cardAnswers.style.display = 'none';
-        cardInputZone.style.display = 'flex';
-        cardSelfEval.style.display = 'none';
-        var correctAnswer = currentQuestion.answers[currentQuestion.correct];
-        inputAnswer.value = DEBUG ? correctAnswer : '';
-        inputAnswer.placeholder = 'Tapez votre réponse…';
-    }
-
-    // --- Type question ouverte (Q3 secrète) ---
-    function setupOpenQuestion() {
-        cardQuestion.textContent = currentQuestion.question;
-        if (DEBUG) {
-            cardQuestion.textContent += '\n[DEBUG: ' + currentQuestion.answers[currentQuestion.correct] + ']';
-        }
-        cardAnswers.style.display = 'none';
-        cardInputZone.style.display = 'flex';
-        cardSelfEval.style.display = 'none';
-        inputAnswer.value = '';
-        inputAnswer.placeholder = 'Réfléchissez, puis validez…';
-    }
-
     // =========================================================
     //  CLIC SUR LA PIOCHE
     // =========================================================
@@ -583,10 +529,6 @@
             // Démarrer le timer pour Q1 secrète
             if (inSecretSection && secretIndex === 0 && !reviewMode) {
                 startTimer();
-            }
-            // Focus l'input si nécessaire
-            if (inSecretSection && secretIndex >= 1 && !reviewMode) {
-                setTimeout(function() { inputAnswer.focus(); }, 600);
             }
         } else if (cardState === 'answered') {
             prepareNewCard();
@@ -745,62 +687,6 @@
         updateUI();
     }
 
-    // --- Réponse texte à trou (Q2 secrète) ---
-    function handleFillBlank() {
-        if (cardState !== 'question') return;
-        cardState = 'answered';
-
-        var userAnswer = inputAnswer.value.trim().toLowerCase();
-        var correctAnswer = currentQuestion.answers[currentQuestion.correct];
-        var correctLower = correctAnswer.toLowerCase();
-
-        // Comparaison souple : contient la bonne réponse
-        var isCorrect = userAnswer.length > 0 && (
-            correctLower === userAnswer ||
-            correctLower.includes(userAnswer) ||
-            userAnswer.includes(correctLower)
-        );
-
-        // Afficher la bonne réponse
-        inputAnswer.disabled = true;
-        btnValidate.disabled = true;
-
-        var revealDiv = document.createElement('div');
-        revealDiv.className = 'fill-reveal ' + (isCorrect ? 'correct' : 'wrong');
-        revealDiv.textContent = 'Réponse : ' + correctAnswer;
-        cardInputZone.appendChild(revealDiv);
-
-        if (isCorrect) {
-            handleSecretCorrect();
-        } else {
-            handleSecretWrong();
-        }
-    }
-
-    // --- Réponse question ouverte (Q3 secrète) ---
-    function handleOpenValidate() {
-        if (cardState !== 'question') return;
-        cardState = 'self-eval';
-
-        // Révéler la bonne réponse et demander auto-évaluation
-        var correctAnswer = currentQuestion.answers[currentQuestion.correct];
-        selfEvalReveal.textContent = 'Réponse attendue : ' + correctAnswer;
-        cardInputZone.style.display = 'none';
-        cardSelfEval.style.display = 'flex';
-    }
-
-    function handleSelfEval(honest) {
-        if (cardState !== 'self-eval') return;
-        cardState = 'answered';
-        cardSelfEval.style.display = 'none';
-
-        if (honest) {
-            handleSecretCorrect();
-        } else {
-            handleSecretWrong();
-        }
-    }
-
     // =========================================================
     //  FIN DE PARTIE — TABLEAU DE BORD
     // =========================================================
@@ -880,36 +766,6 @@
     //  ÉVÉNEMENTS
     // =========================================================
     cardContainer.addEventListener('click', handlePiocheClick);
-
-    btnValidate.addEventListener('click', function(e) {
-        e.stopPropagation();
-        if (inSecretSection && secretIndex === 1) {
-            handleFillBlank();
-        } else if (inSecretSection && secretIndex === 2) {
-            handleOpenValidate();
-        }
-    });
-
-    inputAnswer.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.stopPropagation();
-            btnValidate.click();
-        }
-    });
-
-    inputAnswer.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-
-    btnEvalYes.addEventListener('click', function(e) {
-        e.stopPropagation();
-        handleSelfEval(true);
-    });
-
-    btnEvalNo.addEventListener('click', function(e) {
-        e.stopPropagation();
-        handleSelfEval(false);
-    });
 
     var btnDebug = document.getElementById('btn-debug');
     btnDebug.addEventListener('click', function() {
