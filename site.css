@@ -17,9 +17,10 @@
 @media (max-width: 1180px) { .grades { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .grades { grid-template-columns: 1fr; } }
 .grade { display: flex; flex-direction: column; gap: var(--sp-2);
-  padding: var(--sp-5); text-align: center;
+  padding: var(--sp-5); text-align: center; text-decoration: none;
   border: 1px solid var(--or-ombre); border-radius: var(--r-lg);
-  background: var(--fond-panneau); }
+  background: var(--fond-panneau); transition: border-color var(--t), transform var(--t); }
+.grade:hover { border-color: var(--or-fonce); transform: translateY(-2px); }
 .grade-rang { font-family: var(--font-titre); font-size: 0.7rem;
   letter-spacing: 0.24em; text-indent: 0.24em; color: var(--texte-meta); }
 .grade-nom { font-family: var(--font-titre); font-weight: 600;

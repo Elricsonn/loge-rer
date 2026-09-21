@@ -26,15 +26,18 @@
     // Hiérarchie : apprenti < compagnon < maitre < me
     var GRADE_HIERARCHY = ['apprenti', 'compagnon', 'maitre', 'me'];
 
+    // Le grade ne se déclare pas, il se prouve : soit le quiz est ouvert
+    // depuis le simulateur (même origine) où l'on s'est déjà identifié,
+    // soit on s'identifie ici avec le même mot de passe (auth.js).
+    // Jamais de grade par défaut, jamais de grade lu dans l'adresse.
     function detectConnectedGrade() {
-        // 1. Variable globale posée par la Loge (fusion)
-        if (window._gradeConnecte) return window._gradeConnecte;
-        // 2. Paramètre URL ?grade=
-        var params = new URLSearchParams(window.location.search);
-        var g = params.get('grade');
-        if (g && GRADE_HIERARCHY.indexOf(g) !== -1) return g;
-        // 3. Par défaut : accès complet (me)
-        return 'me';
+        try {
+            if (window.parent !== window) {
+                var g = window.parent._gradeConnecte;
+                if (g && GRADE_HIERARCHY.indexOf(g) !== -1) return g;
+            }
+        } catch (e) { /* autre origine : pas de grade hérité */ }
+        return null;
     }
 
     var connectedGrade = detectConnectedGrade();
@@ -928,7 +931,45 @@
         positionStepLights();
     });
 
+    // --- Identification (quiz ouvert seul) ---
+    var screenLogin = document.getElementById('screen-login');
+    var loginGrade = document.getElementById('quiz-login-grade');
+    var loginMdp = document.getElementById('quiz-login-mdp');
+    var loginError = document.getElementById('quiz-login-error');
+
+    function tenterLoginQuiz() {
+        var grade = loginGrade.value;
+        var mdp = loginMdp.value;
+        if (!grade) { loginError.textContent = 'Veuillez sélectionner votre grade.'; return; }
+        if (!mdp) { loginError.textContent = 'Veuillez saisir le mot de passe.'; return; }
+        if (typeof HASHES === 'undefined' || sha256(mdp.toLowerCase()) !== HASHES[grade]) {
+            loginError.textContent = 'Mot de passe incorrect.';
+            return;
+        }
+        loginError.textContent = '';
+        loginMdp.value = '';
+        connectedGrade = grade;
+        startGame();
+    }
+
+    function demanderIdentification() {
+        // Pré-sélection du grade par l'adresse (?grade=) : simple confort,
+        // le mot de passe reste exigé.
+        var g = new URLSearchParams(window.location.search).get('grade');
+        if (g && GRADE_HIERARCHY.indexOf(g) !== -1) loginGrade.value = g;
+        showScreen(screenLogin);
+        (loginGrade.value ? loginMdp : loginGrade).focus();
+    }
+
+    document.getElementById('quiz-login-btn').addEventListener('click', tenterLoginQuiz);
+    [loginGrade, loginMdp].forEach(function(el) {
+        el.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') tenterLoginQuiz();
+        });
+    });
+
     // --- Démarrage ---
-    startGame();
+    if (connectedGrade) startGame();
+    else demanderIdentification();
 
 })();

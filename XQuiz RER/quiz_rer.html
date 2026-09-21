@@ -22,8 +22,32 @@
         </div>
     </div>
 
+    <!-- Écran d'identification (quiz ouvert seul, hors simulateur) -->
+    <div id="screen-login" class="screen">
+        <div class="login-quiz">
+            <div class="login-quiz-etoiles" aria-hidden="true">⊹ ⊹ ⊹</div>
+            <h1 class="login-quiz-titre">Quiz R∴E∴R∴</h1>
+            <p class="login-quiz-sous-titre">Le Jeu du Catéchisme</p>
+            <div class="login-quiz-form" role="group" aria-label="Identification">
+                <label for="quiz-login-grade" class="sr-only">Grade</label>
+                <select id="quiz-login-grade">
+                    <option value="">— Sélectionner votre grade —</option>
+                    <option value="apprenti">Loge d'Apprenti</option>
+                    <option value="compagnon">Loge de Compagnon</option>
+                    <option value="maitre">Loge de Maître</option>
+                    <option value="me">Loge de Maître Écossais de Saint-André</option>
+                </select>
+                <label for="quiz-login-mdp" class="sr-only">Mot de passe</label>
+                <input type="password" id="quiz-login-mdp" placeholder="Mot de passe" autocomplete="current-password">
+                <button type="button" id="quiz-login-btn">Entrer</button>
+                <div id="quiz-login-error" role="alert" aria-live="polite"></div>
+            </div>
+            <p class="login-quiz-note">Le mot de passe est celui du simulateur. Les questions ne dépassent jamais votre grade.</p>
+        </div>
+    </div>
+
     <!-- Écran de jeu -->
-    <div id="screen-game" class="screen active">
+    <div id="screen-game" class="screen">
         <div class="game-layout">
 
             <!-- PANNEAU GAUCHE : Console -->
@@ -181,6 +205,7 @@
         </div>
     </div>
 
+    <script src="../auth.js"></script>
     <script src="questions.js"></script>
     <script src="game.js"></script>
 </body>

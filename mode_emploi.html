@@ -714,7 +714,7 @@ p code, li code {
 <h2 id="s13">13. Le Quiz du Catéchisme (XQuiz RER)</h2>
 
 <h3>Accès</h3>
-<p><code>quiz_rer.html</code> dans le dossier <code>XQuiz RER/</code>. Lancé depuis la Loge ou en autonome. Grade transmis via <code>window._gradeConnecte</code> ou <code>?grade=</code>.</p>
+<p><code>quiz_rer.html</code> dans le dossier <code>XQuiz RER/</code>. Lancé depuis la Loge (grade repris de la connexion) ou en autonome (identification par grade + mot de passe, mêmes empreintes que le simulateur, dans <code>auth.js</code>).</p>
 
 <h3>Structure du jeu</h3>
 <div class="table-wrap">
@@ -1095,7 +1095,7 @@ p code, li code {
     <li>Ouvrir <code>Loge_RER.html</code> dans un navigateur</li>
     <li>Console F12, taper : <code>sha256("nouveau_mot_de_passe")</code></li>
     <li>Copier le hash</li>
-    <li>Ouvrir le HTML dans un éditeur, chercher <code>HASHES</code>, remplacer le hash du grade</li>
+    <li>Ouvrir <code>auth.js</code> dans un éditeur, chercher <code>HASHES</code>, remplacer le hash du grade (il vaut pour le simulateur ET le quiz)</li>
     <li>Sauvegarder</li>
 </ol>
 
@@ -1103,7 +1103,7 @@ p code, li code {
 <h2 id="s24">24. Le moteur du Quiz (game.js)</h2>
 
 <h3>24.1 Détection du grade</h3>
-<p><code>window._gradeConnecte</code> → URL <code>?grade=</code> → défaut <code>"me"</code>. Hiérarchie : apprenti &lt; compagnon &lt; maitre &lt; me.</p>
+<p>Ouvert dans le simulateur (iframe, même origine) : <code>window.parent._gradeConnecte</code>, posé par la connexion. Sinon : écran d'identification (grade + mot de passe vérifié par <code>sha256</code> contre <code>HASHES</code> de <code>auth.js</code>). <strong>Aucun grade par défaut</strong> ; le paramètre <code>?grade=</code> ne fait que pré-sélectionner le grade, le mot de passe reste exigé. Hiérarchie : apprenti &lt; compagnon &lt; maitre &lt; me.</p>
 
 <h3>24.2 Plafonnement</h3>
 <p><code>capGrade(questionGrade)</code> retourne <code>min(questionGrade, connectedGrade)</code>.</p>
